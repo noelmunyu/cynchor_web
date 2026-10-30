@@ -1,0 +1,158 @@
+{
+  "id": "blue-lockdown",
+  "title": "Blue Holds the Line",
+  "description": "Defenders detect anomalous edge directory enumeration, correlate initial phishing telemetry, and quarantine the endpoint before credential dumping succeeds.",
+  "duration": 30,
+  "events": [
+    {
+      "t": 2,
+      "side": "red",
+      "action": "recon",
+      "node": "mail-gw",
+      "xp": 40,
+      "effects": ["probe:mail-gw"],
+      "detail": {
+        "title": "Subdomain & Mail Gateway Probe",
+        "description": "Adversary probes external MX records and mail gateway headers.",
+        "mitre": "T1595.002",
+        "cmd": "[probe] mx_lookup fintechcorp.local -> mail-gw01.fintechcorp.local (synthetic)",
+        "log": "mail-gw01: TLS handshake verification rate limit triggered (IP: 198.51.100.99)",
+        "mttd": 0,
+        "attackerMove": "Adversary probes perimeter gateway configuration.",
+        "defenderDetect": "Edge WAF / gateway rate-limiting telemetry flag unusual probing burst.",
+        "attackerAdapt": "Slow scan rate below threshold."
+      }
+    },
+    {
+      "t": 6,
+      "side": "blue",
+      "action": "alert",
+      "node": "mail-gw",
+      "xp": 80,
+      "effects": ["alert:medium:mail-gw"],
+      "detail": {
+        "title": "Perimeter Threat Intelligence Flag",
+        "description": "SOC SIEM correlates source IP against known threat intel feed, automatically increasing inspection level.",
+        "mitre": "T1566",
+        "cmd": "siem_rule_eval --source-ip 198.51.100.99 --reputation SUSPICIOUS",
+        "log": "SIEM: Threat feed match on external CIDR. Email quarantine threshold set to aggressive.",
+        "mttd": 6,
+        "attackerMove": "Adversary attempts spearphish campaign through perimeter.",
+        "defenderDetect": "Pre-emptive threat intel correlation on inbound mail stream.",
+        "attackerAdapt": "Compromise a reputable third-party vendor email domain."
+      }
+    },
+    {
+      "t": 11,
+      "side": "red",
+      "action": "phish",
+      "node": "ws-402",
+      "xp": 90,
+      "effects": ["probe:ws-402"],
+      "detail": {
+        "title": "Phishing Payload Delivery",
+        "description": "Deceptive invoice attachment reaches staging buffer on ws-402.",
+        "mitre": "T1566.001",
+        "cmd": "[delivery] smtp_inject --recipient analyst@fintechcorp.local --file invoice_992.xlsm",
+        "log": "ws-402 Defender: Quarantined payload before user execution (Signature: MockHeuristics)",
+        "mttd": 11,
+        "attackerMove": "Attempts invoice macro execution on user workstation.",
+        "defenderDetect": "Endpoint protection heuristics and Mail Gateway attachment sandbox.",
+        "attackerAdapt": "Encrypt archive with out-of-band password to bypass sandbox."
+      }
+    },
+    {
+      "t": 16,
+      "side": "blue",
+      "action": "triage",
+      "node": "ws-402",
+      "xp": 110,
+      "effects": ["alert:high:ws-402"],
+      "detail": {
+        "title": "SOC Triage & Indicator Extraction",
+        "description": "Blue analyst validates malicious macro hash and sender header inconsistencies.",
+        "mitre": "T1204.002",
+        "cmd": "soc_analyst triage --ticket CASE-4401 --verdict CONFIRMED_PHISH",
+        "log": "SOC-QUEUE: Ticket CASE-4401 moved from DETECTED -> TRIAGED (Confidence 98%)",
+        "mttd": 10,
+        "attackerMove": "Adversary awaits reverse shell callback.",
+        "defenderDetect": "Analyst extracts C2 domain from attachment metadata.",
+        "attackerAdapt": "Implement multi-stage staging server with domain fronting."
+      }
+    },
+    {
+      "t": 22,
+      "side": "blue",
+      "action": "isolate",
+      "node": "ws-402",
+      "xp": 150,
+      "effects": ["isolate:ws-402", "quarantine:mail-gw"],
+      "detail": {
+        "title": "Proactive Isolation & C2 Sinkholing",
+        "description": "SOC applies Proxmox SDN firewall drop rule and sinkholes adversary C2 callback domain.",
+        "mitre": "T1071.001",
+        "cmd": "pve-firewall ipset add quarantined_hosts 10.0.2.42; dns_sinkhole add evil-fintechcorp.fake",
+        "log": "Core Router: 0 packets leaked. Attack chain broken at delivery stage.",
+        "mttd": 10,
+        "attackerMove": "Callback attempts fail; host unreachable.",
+        "defenderDetect": "Sinkhole telemetry logs connection attempt with 0 bytes transferred.",
+        "attackerAdapt": "Pivot to physical drop or supply chain compromise."
+      }
+    },
+    {
+      "t": 27,
+      "side": "blue",
+      "action": "contain",
+      "node": "dc-01",
+      "xp": 180,
+      "effects": ["alert:cleared:ws-402"],
+      "detail": {
+        "title": "Zero Breach Confirmed",
+        "description": "Domain controller and finance databases remain completely uncompromised.",
+        "mitre": "T1078",
+        "cmd": "audit_verify --domain fintechcorp.local --status ALL_SYSTEMS_CLEAN",
+        "log": "SOC Report: Breach neutralized. Zero lateral movement. MTTD 10s. MTTR 22s.",
+        "mttd": 10,
+        "attackerMove": "Adversary disengages after losing access.",
+        "defenderDetect": "All enterprise assets intact; post-incident review logged.",
+        "attackerAdapt": "Regroup and prepare alternate attack vector."
+      }
+    }
+  ],
+  "decisionPoints": [
+    {
+      "t": 12,
+      "prompt": "Phishing email intercepted with suspicious attachment for analyst@fintechcorp.local. What action should Blue SOC prioritize?",
+      "options": [
+        {
+          "id": "opt-quarantine-hash",
+          "label": "Quarantine email across all mailboxes & block payload hash in EDR",
+          "correct": true,
+          "feedback": "Flushed malicious payload from all inboxes before any user could open it.",
+          "xpDelta": 110
+        },
+        {
+          "id": "opt-wait-callback",
+          "label": "Allow execution in monitor mode to see attacker C2 infrastructure",
+          "correct": false,
+          "feedback": "Risky live monitoring allowed adversary process to query local cached tokens.",
+          "xpDelta": 30
+        },
+        {
+          "id": "opt-notify-user",
+          "label": "Send an email warning to the recipient",
+          "correct": false,
+          "feedback": "Warning arrived too late after user had already downloaded the attachment.",
+          "xpDelta": 10
+        }
+      ]
+    }
+  ],
+  "review": {
+    "redScore": 130,
+    "blueScore": 520,
+    "mttd": "10 seconds",
+    "lesson": "Pre-emptive perimeter threat correlation and rapid endpoint hash blacklisting prevent attackers from gaining an initial foothold.",
+    "labeled": "Illustrative"
+  }
+}

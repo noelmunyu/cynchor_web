@@ -1,0 +1,205 @@
+{
+  "id": "red-breakthrough",
+  "title": "Red Breakthrough",
+  "description": "Adversary achieves initial execution via synthetic spearphish, discovers privileged accounts, pivots laterally via SMB, and reaches finance database before containment.",
+  "duration": 36,
+  "events": [
+    {
+      "t": 2,
+      "side": "red",
+      "action": "recon",
+      "node": "mail-gw",
+      "xp": 50,
+      "effects": ["probe:mail-gw"],
+      "detail": {
+        "title": "Directory Enumeration",
+        "description": "Synthetic crawler probes publicly exposed endpoints for employee email formats.",
+        "mitre": "T1087.002",
+        "cmd": "[recon] query ldap://fintechcorp.local -s sub (objectClass=person) ... 412 entries (synthetic)",
+        "log": "mail-gw.fintechcorp.local: TLS handshakes from 198.51.100.44:49210 rate 32 req/s",
+        "mttd": 0,
+        "attackerMove": "Adversary sweeps external mail gateway for naming conventions.",
+        "defenderDetect": "Rate anomalies on edge SMTP logs and TLS handshake bursts.",
+        "attackerAdapt": "Slow down probe rate or rotate external proxy IPs to evade threshold alarms."
+      }
+    },
+    {
+      "t": 7,
+      "side": "red",
+      "action": "phish",
+      "node": "ws-402",
+      "xp": 100,
+      "effects": ["probe:ws-402"],
+      "detail": {
+        "title": "Spearphishing Attachment",
+        "description": "Targeted lookalike payroll notification delivered to finance operator workstation.",
+        "mitre": "T1566.001",
+        "cmd": "[payload] delivery simulated macro sheet 'Q3_Adjustment_Form.xlsx' -> ws-402.fintechcorp.local",
+        "log": "ws-402 winlogon: Process excel.exe spawned synthetic powershell.exe -NonI -Enc (flagged)",
+        "mttd": 14,
+        "attackerMove": "Delivers deceptive spreadsheet targeting finance operator.",
+        "defenderDetect": "EDR detects Excel executing non-interactive script interpreter.",
+        "attackerAdapt": "Use HTML smuggling or signed living-off-the-land binaries (LOLBins)."
+      }
+    },
+    {
+      "t": 12,
+      "side": "blue",
+      "action": "alert",
+      "node": "ws-402",
+      "xp": 75,
+      "effects": ["alert:high:ws-402"],
+      "detail": {
+        "title": "EDR Process Tree Alert",
+        "description": "SOC alert queue receives high-severity notification: uncharacteristic child process under office app.",
+        "mitre": "T1059.001",
+        "cmd": "soc_query --alert-id AL-9021 --host ws-402.fintechcorp.local --status DETECTED",
+        "log": "SOC-ALERT [HIGH]: Suspicious process execution ws-402: cmdline token match regex /enc/i",
+        "mttd": 12,
+        "attackerMove": "Adversary executes preliminary in-memory payload on workstation.",
+        "defenderDetect": "Behavioral rule matching office suite child processes spawning script hosts.",
+        "attackerAdapt": "Adversary injects into running explorer.exe thread immediately upon spawn."
+      }
+    },
+    {
+      "t": 16,
+      "side": "red",
+      "action": "foothold",
+      "node": "ws-402",
+      "xp": 120,
+      "effects": ["compromise:ws-402"],
+      "detail": {
+        "title": "Initial Foothold & Credential Harvest",
+        "description": "Adversary dumps local LSASS cache (synthetic simulation) to retrieve cached domain tokens.",
+        "mitre": "T1078.002",
+        "cmd": "[creds] dump memory space PID 684 (synthetic minidump simulation) -> 1 token found",
+        "log": "ws-402 Security-Auditing 4624: Special logon granted for SVC-BACKUP (elevated)",
+        "mttd": 16,
+        "attackerMove": "Adversary extracts cached backup credentials from compromised workstation memory.",
+        "defenderDetect": "Access handle requests to lsass.exe process with PROCESS_VM_READ mask.",
+        "attackerAdapt": "Avoid lsass dumping by targeting browser credential stores or DPAPI tokens."
+      }
+    },
+    {
+      "t": 22,
+      "side": "red",
+      "action": "pivot",
+      "node": "dc-01",
+      "xp": 150,
+      "effects": ["probe:dc-01"],
+      "detail": {
+        "title": "Lateral Movement via SMB",
+        "description": "Adversary utilizes stolen service account credentials to establish remote service on dc-01.",
+        "mitre": "T1021.002",
+        "cmd": "[pivot] smb-exec 10.0.3.5 /user:SVC-BACKUP /admin$ remote_service_create (synthetic)",
+        "log": "dc-01 Security-Auditing 7045: A service was installed in the system: svc-diag32 (synthetic)",
+        "mttd": 22,
+        "attackerMove": "Pivots laterally from workstation to domain controller using admin share.",
+        "defenderDetect": "Event ID 7045 from non-management IP address subnet.",
+        "attackerAdapt": "Leverage WMI or WinRM with legitimate admin tooling rather than raw SMB service creation."
+      }
+    },
+    {
+      "t": 28,
+      "side": "red",
+      "action": "objective",
+      "node": "srv-fin",
+      "xp": 200,
+      "effects": ["compromise:srv-fin"],
+      "detail": {
+        "title": "Reaching Finance Vault",
+        "description": "Adversary accesses high-value ledger database server srv-fin01.fintechcorp.local.",
+        "mitre": "T1078",
+        "cmd": "[objective] connect tds://10.0.4.100:1433/LedgerDB -U sa_shadow (synthetic ledger read)",
+        "log": "srv-fin01 LedgerDB Audit: SELECT * FROM synthetic_customers_ledger LIMIT 1000",
+        "mttd": 28,
+        "attackerMove": "Connects directly to internal finance database server from internal foothold.",
+        "defenderDetect": "Direct database connection initiated from workstation rather than app tier.",
+        "attackerAdapt": "Tunnel query traffic through approved web application server via SQL injection."
+      }
+    },
+    {
+      "t": 32,
+      "side": "blue",
+      "action": "isolate",
+      "node": "ws-402",
+      "xp": 180,
+      "effects": ["isolate:ws-402", "alert:critical:srv-fin"],
+      "detail": {
+        "title": "Network Containment & Token Revocation",
+        "description": "SOC issues micro-segmentation isolation rule on ws-402 and revokes SVC-BACKUP Kerberos tickets.",
+        "mitre": "T1021.002",
+        "cmd": "pve-firewall ipset add quarantined_hosts 10.0.2.42; klist purge /user:SVC-BACKUP",
+        "log": "Proxmox SDN: Rule applied - DROP ALL IN/OUT ws-402 (10.0.2.42) except SOC tap 10.0.99.1",
+        "mttd": 32,
+        "attackerMove": "Adversary attempts persistent C2 heartbeat from ws-402.",
+        "defenderDetect": "Immediate TCP RST on command-and-control beacon and host isolation.",
+        "attackerAdapt": "Attempt secondary backdoor channel via DNS tunneling or fallback scheduled task."
+      }
+    }
+  ],
+  "decisionPoints": [
+    {
+      "t": 13,
+      "prompt": "EDR detected anomalous script execution on ws-402.fintechcorp.local. What is your containment action?",
+      "options": [
+        {
+          "id": "opt-isolate",
+          "label": "Isolate host ws-402 via SDN & preserve memory",
+          "correct": true,
+          "feedback": "Host isolated within 14s. Cut adversary lateral movement path before credential dump.",
+          "xpDelta": 100
+        },
+        {
+          "id": "opt-reboot",
+          "label": "Restart workstation ws-402 to clear process",
+          "correct": false,
+          "feedback": "Reboot wiped volatile RAM evidence while adversary persistence survived in run-keys.",
+          "xpDelta": 10
+        },
+        {
+          "id": "opt-domain-block",
+          "label": "Block sender domain only on mail gateway",
+          "correct": false,
+          "feedback": "Sender blocked for new emails, but active in-memory payload on ws-402 continued unhindered.",
+          "xpDelta": 20
+        }
+      ]
+    },
+    {
+      "t": 23,
+      "prompt": "Lateral movement detected on dc-01 via SMB Admin Share. How do you respond?",
+      "options": [
+        {
+          "id": "opt-revoke-creds",
+          "label": "Revoke Kerberos TGT & force domain-wide reset of SVC-BACKUP",
+          "correct": true,
+          "feedback": "Invalidated attacker ticket cache immediately, preventing access to ledger database.",
+          "xpDelta": 120
+        },
+        {
+          "id": "opt-dc-firewall",
+          "label": "Disconnect DC-01 completely from the network",
+          "correct": false,
+          "feedback": "Dropping the DC caused full enterprise authentication outage across fintechcorp.local.",
+          "xpDelta": -30
+        },
+        {
+          "id": "opt-disk-scan",
+          "label": "Queue full disk antivirus scan on dc-01",
+          "correct": false,
+          "feedback": "Traditional file scan took 45 minutes; attacker memory injection was not intercepted.",
+          "xpDelta": 15
+        }
+      ]
+    }
+  ],
+  "review": {
+    "redScore": 520,
+    "blueScore": 375,
+    "mttd": "14 seconds",
+    "lesson": "Fast host isolation at the initial compromise stage prevents lateral SMB pivoting to high-value domain controllers.",
+    "labeled": "Illustrative"
+  }
+}
+

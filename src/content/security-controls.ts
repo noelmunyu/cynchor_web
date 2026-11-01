@@ -1,9 +1,28 @@
+import fs from 'fs';
+import path from 'path';
+
+export interface SecurityEvidence {
+  file: string;
+  contains: string;
+}
+
+export type ControlCategory =
+  | 'application'
+  | 'infrastructure'
+  | 'identity'
+  | 'data'
+  | 'monitoring'
+  | 'disclosure';
+
 export interface SecurityControl {
   id: string;
+  category: ControlCategory;
   title: string;
   description: string;
+  visibility: 'claimed' | 'roadmap' | 'hidden';
   status: 'live-v1' | 'designed-v2';
   verified: boolean;
+  evidence?: SecurityEvidence[];
   howWeVerify: string;
 }
 
@@ -59,93 +78,256 @@ export const SECURITY_CONTENT = {
     },
   ] as SecurityPrinciple[],
   controls: [
-    // Verified Section 5 Controls (Implemented & Verified with Unit/Integration Tests)
+    // ════════════════════════════════════════════════════════════
+    // CLAIMED CONTROLS (Live in V1, Verified with File Evidence)
+    // ════════════════════════════════════════════════════════════
     {
-      id: 'ctrl-session-sec',
-      title: 'Cryptographic Session & Cookie Hygiene',
-      description: 'Session identifiers are cryptographically generated, re-issued with fresh entropy on every login and revoked server-side on logout, and delivered via HttpOnly, Secure, and SameSite=Lax cookie headers.',
+      id: 'ctrl-pw-scrypt',
+      category: 'identity',
+      title: 'Salted scrypt password hashing & constant-time compare',
+      description: 'Passwords are protected using cryptographic key derivation (scrypt) with individual salts and verified using constant-time timingSafeEqual comparisons to eliminate timing attack vectors.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'Enforced in src/lib/session.ts: HMAC-signed tokens, timing-safe comparison, HttpOnly and SameSite cookie flags. Verified by code review.',
+      evidence: [
+        { file: 'src/lib/db.ts', contains: 'crypto.scryptSync(password, actualSalt, 64)' },
+        { file: 'src/lib/db.ts', contains: 'crypto.timingSafeEqual' },
+      ],
+      howWeVerify: 'Tested in tests/securityControls.test.ts: verifies unique salts per user and constant-time equality validation.',
     },
     {
-      id: 'ctrl-pw-rate-limit',
-      title: 'Password Hashing and Login Lockout',
-      description: 'Salted cryptographic key derivation with constant-time equality checks. Login endpoints enforce rate limiting with lockout backoff to prevent brute-force attacks.',
+      id: 'ctrl-session-sec',
+      category: 'identity',
+      title: 'Cryptographic HMAC session cookies with server-side revocation',
+      description: 'Session tokens are signed with HMAC-SHA256, delivered with HttpOnly, SameSite=Lax, and Secure cookie flags, and validated against session versioning for immediate server-side revocation on logout.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'Unit tests cover salted scrypt hashing and the rate-limit lockout logic. Timing-safe comparison is enforced in code.',
+      evidence: [
+        { file: 'src/lib/session.ts', contains: 'crypto.createHmac("sha256", getSessionSecret())' },
+        { file: 'src/lib/session.ts', contains: "sameSite: 'lax'" },
+        { file: 'src/lib/session.ts', contains: 'export function revokeUserSessions' },
+      ],
+      howWeVerify: 'Enforced in src/lib/session.ts and tested in tests/sessionRevocation.test.ts.',
     },
     {
       id: 'ctrl-invite-tokens',
-      title: 'Single-Use 256-bit Hashed Invite Tokens',
-      description: 'Lab invitations use CSPRNG 256-bit entropy, stored as SHA-256 hashes in the invites table, with strict 7-day expiration and single-use invalidation upon consumption.',
+      category: 'identity',
+      title: 'Single-use 256-bit hashed invite tokens',
+      description: 'Access invitations use CSPRNG 256-bit entropy, stored strictly as SHA-256 hashes in the invites table, with 7-day expiration and single-use consumption.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'A unit test confirms the 256-bit token format and single-use enforcement. Lookups are by SHA-256 hash only.',
+      evidence: [
+        { file: 'src/lib/db.ts', contains: "crypto.randomBytes(32).toString('hex')" },
+        { file: 'src/lib/db.ts', contains: 'export function verifyAndConsumeInvite' },
+      ],
+      howWeVerify: 'Tested in tests/securityControls.test.ts: asserts 256-bit token entropy and replay rejection.',
+    },
+    {
+      id: 'ctrl-rate-limiting',
+      category: 'application',
+      title: 'IP & account authentication rate limiting',
+      description: 'Authentication endpoints and public access request routes enforce sliding-window rate limiting with exponential lockout backoff to protect against automated credential attacks.',
+      visibility: 'claimed',
+      status: 'live-v1',
+      verified: true,
+      evidence: [
+        { file: 'src/lib/session.ts', contains: 'export function checkRateLimit' },
+        { file: 'src/app/api/auth/login/route.ts', contains: 'checkRateLimit(`login_${ip}`, 5, 60)' },
+      ],
+      howWeVerify: 'Tested in tests/securityControls.test.ts: verifies 5-attempt threshold and lockout retry-after duration.',
     },
     {
       id: 'ctrl-input-validation',
-      title: 'Strict Zod Input Validation & SQL Parameterization',
-      description: 'Login and access-request payloads are validated against Zod schemas with length limits. All database interactions utilize prepared statements.',
+      category: 'application',
+      title: 'Strict Zod schema validation & parameterized SQL',
+      description: 'All incoming request payloads are strictly parsed and sanitized against Zod schemas. Database queries use prepared statements with parameter binding to prevent injection.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'Unit tests run malformed and script-injection payloads against the Zod schemas.',
+      evidence: [
+        { file: 'src/lib/validators.ts', contains: 'export const loginSchema = z.object' },
+        { file: 'src/lib/validators.ts', contains: 'export const accessRequestSchema = z.object' },
+      ],
+      howWeVerify: 'Tested in tests/validators.test.ts: asserts schema rejection on malformed inputs and script tags.',
     },
     {
       id: 'ctrl-security-headers',
-      title: 'Hardened HTTP Security Headers and CSP',
-      description: 'Every route delivers a Content-Security-Policy (frame-ancestors none), Strict-Transport-Security, X-Content-Type-Options nosniff, and Referrer-Policy strict-origin-when-cross-origin.',
+      category: 'infrastructure',
+      title: 'Hardened HTTP headers, CSP & cross-origin write blocking',
+      description: 'Every HTTP response delivers strict security headers including frame-ancestors none CSP, HSTS, nosniff, and cross-origin write blocking to prevent clickjacking and state manipulation.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'Headers are set for every route in src/middleware.ts and can be inspected in any browser network panel.',
-    },
-    {
-      id: 'ctrl-audit-trail',
-      title: 'Append-Only Audit Logging with IP Hashing',
-      description: 'Security-critical actions (logins, invite creation, access approvals) are recorded in an append-only audit log table with one-way SHA-256 hashed IP addresses.',
-      status: 'live-v1',
-      verified: true,
-      howWeVerify: 'Unit tests assert entries are written with hashed IPs and that the database rejects updates and deletes.',
+      evidence: [
+        { file: 'src/middleware.ts', contains: "frame-ancestors 'none'" },
+        { file: 'src/middleware.ts', contains: 'Cross-origin request blocked.' },
+      ],
+      howWeVerify: 'Enforced globally via Next.js middleware in src/middleware.ts on all HTTP requests.',
     },
     {
       id: 'ctrl-rbac-enforcement',
-      title: 'Role-Based Access Control (RBAC) on Protected Routes',
-      description: 'Administrative API routes verify the operator flag on the server for every request. Unauthenticated or unauthorized callers receive immediate 401/403 responses.',
+      category: 'identity',
+      title: 'Server-side route guards & operator RBAC',
+      description: 'Administrative and operational capabilities require server-verified operator privileges. Requests lacking operator credentials receive immediate 401/403 responses.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'Every admin route checks the operator flag on the server for each request. Automated RBAC tests are on our roadmap.',
+      evidence: [
+        { file: 'src/lib/guards.ts', contains: 'if (opts.operator === true && isOperator === false) redirect' },
+        { file: 'src/app/api/admin/route.ts', contains: 'Forbidden: Operator privileges required' },
+      ],
+      howWeVerify: 'Guards verify signed operator credentials on the server before rendering admin views or executing admin APIs.',
+    },
+    {
+      id: 'ctrl-audit-trail',
+      category: 'monitoring',
+      title: 'Append-only audit logging with privacy IP hashing',
+      description: 'Security actions (authentication, access approval, invite provisioning) are recorded with one-way SHA-256 hashed IP addresses and protected against modification by database triggers.',
+      visibility: 'claimed',
+      status: 'live-v1',
+      verified: true,
+      evidence: [
+        { file: 'src/lib/db.ts', contains: 'CREATE TRIGGER IF NOT EXISTS audit_logs_no_update' },
+        { file: 'src/lib/db.ts', contains: 'CREATE TRIGGER IF NOT EXISTS audit_logs_no_delete' },
+      ],
+      howWeVerify: 'Tested in tests/auditAppendOnly.test.ts: verifies that UPDATE and DELETE statements raise database abort exceptions.',
+    },
+    {
+      id: 'ctrl-invite-only',
+      category: 'identity',
+      title: 'Operator-provisioned invite-only access',
+      description: 'Public self-registration is disabled. Access to interactive ranges requires an invitation issued by an operator or manual provisioning through administrative routes.',
+      visibility: 'claimed',
+      status: 'live-v1',
+      verified: true,
+      evidence: [
+        { file: 'src/app/api/admin/route.ts', contains: "action === 'PROVISION_USER'" },
+      ],
+      howWeVerify: 'Public signup routes are omitted by design; account creation requires verified operator session.',
+    },
+    {
+      id: 'ctrl-data-minimization',
+      category: 'data',
+      title: 'Data minimization on access requests',
+      description: 'The platform collects only operational name and email for waitlist and access requests. No unnecessary personal, financial, or tracking data is gathered.',
+      visibility: 'claimed',
+      status: 'live-v1',
+      verified: true,
+      evidence: [
+        { file: 'src/lib/validators.ts', contains: 'export const accessRequestSchema = z.object' },
+      ],
+      howWeVerify: 'Tested in tests/validators.test.ts: verifies payload rejects extraneous unmodeled fields.',
     },
     {
       id: 'ctrl-security-txt',
-      title: 'Standardized Responsible Disclosure (security.txt)',
-      description: 'RFC 9116 security.txt metadata published at /.well-known/security.txt defining vulnerability reporting policy and public disclosure guidelines.',
+      category: 'disclosure',
+      title: 'RFC 9116 standardized security.txt disclosure manifest',
+      description: 'Vulnerability disclosure policy and reporting contacts are published at /.well-known/security.txt conforming to RFC 9116 standards.',
+      visibility: 'claimed',
       status: 'live-v1',
       verified: true,
-      howWeVerify: 'A unit test checks the file contains the Contact, Expires, Preferred-Languages and Canonical fields.',
+      evidence: [
+        { file: 'public/.well-known/security.txt', contains: 'Contact: mailto:security@cynchor.com' },
+        { file: 'public/.well-known/security.txt', contains: 'Expires:' },
+      ],
+      howWeVerify: 'Tested in tests/securityControls.test.ts: confirms RFC 9116 mandatory headers and future expiration date.',
     },
 
-    // Unverified / Future V2 Designed Controls (verified: false -> must NOT be rendered)
+    // ════════════════════════════════════════════════════════════
+    // ROADMAP CONTROLS (Designed for V2, Not Yet In Place)
+    // ════════════════════════════════════════════════════════════
+    {
+      id: 'ctrl-mfa',
+      category: 'identity',
+      title: 'MFA for operator accounts',
+      description: 'Time-based one-time password (TOTP) or WebAuthn hardware key multi-factor authentication for administrative accounts.',
+      visibility: 'roadmap',
+      status: 'designed-v2',
+      verified: false,
+      howWeVerify: 'Planned for operator authentication in V2.',
+    },
+    {
+      id: 'ctrl-ci-dep-scanning',
+      category: 'application',
+      title: 'Automated dependency scanning in CI',
+      description: 'Automated vulnerability scanning of dependencies in continuous integration pipelines on every pull request.',
+      visibility: 'roadmap',
+      status: 'designed-v2',
+      verified: false,
+      howWeVerify: 'CI workflow enforcement via GitHub Actions.',
+    },
+    {
+      id: 'ctrl-encryption-at-rest',
+      category: 'data',
+      title: 'Encryption at rest (disk-level, deployment-dependent)',
+      description: 'Persistent volume and database file encryption depends on deployment host disk encryption; not enforced by the application today.',
+      visibility: 'roadmap',
+      status: 'designed-v2',
+      verified: false,
+      howWeVerify: 'Host disk volume encryption verification.',
+    },
+    {
+      id: 'ctrl-pen-test',
+      category: 'application',
+      title: 'Third-party penetration test',
+      description: 'Independent third-party penetration testing and vulnerability assessment across web application and simulation boundaries.',
+      visibility: 'roadmap',
+      status: 'designed-v2',
+      verified: false,
+      howWeVerify: 'Formal third-party assessment report and remediation audit.',
+    },
+    {
+      id: 'ctrl-ir-runbook',
+      category: 'disclosure',
+      title: 'Formal incident-response runbook with response targets',
+      description: 'Documented incident response classification, escalation matrix, and customer notification SLA commitments.',
+      visibility: 'roadmap',
+      status: 'designed-v2',
+      verified: false,
+      howWeVerify: 'Simulated tabletop exercise and documented incident response runbooks.',
+    },
+    {
+      id: 'ctrl-data-retention',
+      category: 'data',
+      title: 'Data-retention schedule',
+      description: 'Automated retention and purge schedules for expired invite tokens, inactive demo accounts, and audit log records.',
+      visibility: 'roadmap',
+      status: 'designed-v2',
+      verified: false,
+      howWeVerify: 'Automated database retention prune job execution.',
+    },
+
+    // ════════════════════════════════════════════════════════════
+    // HIDDEN CONTROLS (Never Rendered)
+    // ════════════════════════════════════════════════════════════
     {
       id: 'ctrl-cloudhsm',
+      category: 'infrastructure',
       title: 'AWS CloudHSM Hardware Root of Trust',
       description: 'FIPS 140-2 Level 3 hardware security module key generation and storage.',
+      visibility: 'hidden',
       status: 'designed-v2',
       verified: false,
       howWeVerify: 'Pending AWS GovCloud production infrastructure deployment.',
     },
     {
       id: 'ctrl-fedramp',
+      category: 'infrastructure',
       title: 'FedRAMP High Continuous Monitoring Baseline',
       description: 'Continuous monitoring automation conforming to FedRAMP High baseline requirements.',
+      visibility: 'hidden',
       status: 'designed-v2',
       verified: false,
       howWeVerify: 'Formal 3PAO assessment pending future release.',
     },
     {
       id: 'ctrl-soc2',
+      category: 'application',
       title: 'Automated SOC 2 Type II Evidence Harvester',
       description: 'Continuous automated compliance evidence aggregation across infrastructure tiers.',
+      visibility: 'hidden',
       status: 'designed-v2',
       verified: false,
       howWeVerify: 'Auditor review scheduled post-V2 launch.',
@@ -171,4 +353,3 @@ export const SECURITY_CONTENT = {
     ],
   },
 };
-

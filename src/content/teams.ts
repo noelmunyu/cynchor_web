@@ -92,7 +92,7 @@ export const TEAMS_CONTENT = {
       title: 'Network Security',
       badge: 'Infrastructure',
       badgeType: 'neutral',
-      description: 'Design zero-trust boundary controls, configure mail gateway threat policies, and inspect TLS handshakes across DMZ perimeters.',
+      description: 'Design defense-in-depth boundary controls, configure mail gateway threat policies, and inspect TLS handshakes across DMZ perimeters.',
       skills: ['Proxmox SDN Policies', 'Firewall Rule Tuning', 'DNS Sinkholing', 'VLAN Micro-segmentation'],
     },
     {

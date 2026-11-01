@@ -210,6 +210,10 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
         description: 'Continuous testing executed via npm test covering password hashing, session revocation, single-use invites, audit immutability, and rate limits.',
       },
       {
+        title: 'Continuous Dependency Scanning',
+        description: 'Automated CI workflow in .github/workflows/ci.yml runs npm audit on every push and pull request to identify vulnerable dependencies.',
+      },
+      {
         title: 'Strict TypeScript',
         description: 'Full TypeScript coverage across the server runtime, frontend components, and simulation engines to catch type errors at build time.',
       },
@@ -222,10 +226,6 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
       {
         title: 'Static & Dynamic Code Analysis (SAST/DAST)',
         description: 'Automated static analysis and dynamic runtime scanning integrated into pull request pipelines.',
-      },
-      {
-        title: 'Automated Dependency Vulnerability Scanning',
-        description: 'Automated CI scanning on every pull request to identify vulnerable dependencies.',
       },
       {
         title: 'Formal Peer-Review Change Policy',

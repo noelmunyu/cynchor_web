@@ -20,6 +20,7 @@ interface RequestItem {
   name: string;
   email: string;
   status: string;
+  source?: string;
   created_at: string;
   generated_invite_token?: string;
 }
@@ -373,7 +374,14 @@ export default function AdminPage() {
                       className="p-3 rounded-xl border border-border bg-surface-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                     >
                       <div>
-                        <div className="font-heading font-semibold text-text">{req.name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-heading font-semibold text-text">{req.name}</span>
+                          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded uppercase border ${
+                            req.source === 'pilot' ? 'bg-coral/15 text-coral border-coral/30' : 'bg-teal/15 text-teal border-teal/30'
+                          }`}>
+                            {req.source === 'pilot' ? 'pilot' : 'demo'}
+                          </span>
+                        </div>
                         <div className="font-mono text-muted text-[11px]">{req.email}</div>
                       </div>
 

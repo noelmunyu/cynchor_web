@@ -1,7 +1,20 @@
 import type { Metadata } from 'next';
+import { Inter, Lexend } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/common/Header';
 import { Footer } from '@/components/common/Footer';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const lexend = Lexend({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-lexend',
+});
 
 export const metadata: Metadata = {
   title: 'Cynchor — Adversarial Cyber Range & Live Training Platform',
@@ -40,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark bg-bg">
+    <html lang="en" className={`dark bg-bg ${inter.variable} ${lexend.variable}`}>
       <body className="min-h-screen flex flex-col bg-bg text-text font-sans selection:bg-teal/30 selection:text-white">
         <Header />
         <main className="flex-1 flex flex-col">{children}</main>

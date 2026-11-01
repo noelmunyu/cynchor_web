@@ -55,7 +55,7 @@ export default function HomePage() {
                 <span 
                   className="font-black"
                   style={{
-                    background: 'linear-gradient(100deg, #17ABA9 0%, #5FD0C8 35%, #F08A6F 65%, #EA694B 100%)',
+                    background: 'linear-gradient(100deg, #17ABA9 0%, #17ABA9 48%, #EA694B 52%, #EA694B 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     color: 'transparent',

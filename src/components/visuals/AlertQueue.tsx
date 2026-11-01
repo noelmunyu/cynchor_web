@@ -62,7 +62,7 @@ export function AlertQueue({
         </div>
         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-teal/10 border border-teal/30 text-[11px] text-teal">
           <Clock className="w-3 h-3" />
-          <span>MTTD: <strong>{mttdSeconds > 0 ? `${mttdSeconds}s` : '12s (avg)'}</strong></span>
+          <span>MTTD: <strong>{mttdSeconds > 0 ? `${mttdSeconds}s` : '—'}</strong></span>
         </div>
       </div>
 

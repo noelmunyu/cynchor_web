@@ -60,7 +60,8 @@ export function SkillRadar({
 
   return (
     <div className={`relative flex flex-col items-center justify-center font-mono select-none ${className}`}>
-      <svg width={size} height={size} className="overflow-visible">
+      <svg width={size} height={size} className="overflow-visible" role="img" aria-label="Analyst 6-axis operational skill radar">
+        <title>Analyst Skill Radar</title>
         {/* Background rings */}
         {rings.map((ringFactor, rIdx) => {
           const ringPoints = categories

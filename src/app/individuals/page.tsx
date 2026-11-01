@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { Badge } from '@/components/common/Badge';
 import { XPBar } from '@/components/visuals/XPBar';
 import { SkillRadar, RadarSkills } from '@/components/visuals/SkillRadar';
+import { PlayModeSwitch } from '@/components/visuals/PlayModeSwitch';
 import { INDIVIDUALS_CONTENT, TriageCase } from '@/content/individuals';
+import { hintCost, totalHintPenalty } from '@/lib/rangeSim/scoring';
+import { PlayMode } from '@/content/modes';
 import {
   Clock,
   User,
@@ -23,14 +26,26 @@ import {
   Lock,
   Layers,
   ChevronRight,
+  HelpCircle,
+  Lightbulb,
+  CheckSquare,
 } from 'lucide-react';
 
 export default function IndividualsPage() {
+  const [playMode, setPlayMode] = useState<PlayMode>('self-service');
   const [currentCaseIndex, setCurrentCaseIndex] = useState<number>(0);
   const [selectedIndicators, setSelectedIndicators] = useState<Record<string, boolean>>({});
   const [verdictSubmitted, setVerdictSubmitted] = useState<boolean>(false);
   const [userVerdict, setUserVerdict] = useState<string | null>(null);
   const [reportFiled, setReportFiled] = useState<boolean>(false);
+
+  // Self-service Hint Ladder state
+  const [unlockedHints, setUnlockedHints] = useState<(1 | 2 | 3)[]>([]);
+  const [checkpointResult, setCheckpointResult] = useState<{ passed: boolean; message: string } | null>(null);
+
+  // Facilitator session control state (for individuals lab)
+  const [sessionState, setSessionState] = useState<'Running' | 'Paused by instructor' | 'Locked'>('Running');
+  const [showReviewToast, setShowReviewToast] = useState(false);
 
   // User Stats State
   const [userXP, setUserXP] = useState<number>(INDIVIDUALS_CONTENT.workstation.initialXP);
@@ -47,22 +62,76 @@ export default function IndividualsPage() {
 
   const activeCase: TriageCase = INDIVIDUALS_CONTENT.cases[currentCaseIndex];
 
+  // Read URL hash on mount if present (#facilitator-led / #self-service)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'facilitator-led' || hash === 'self-service') {
+        setPlayMode(hash as PlayMode);
+      }
+    }
+  }, []);
+
   const handleToggleIndicator = (indicatorId: string) => {
-    if (verdictSubmitted) return;
+    if (verdictSubmitted || sessionState !== 'Running') return;
     setSelectedIndicators((prev) => ({
       ...prev,
       [indicatorId]: !prev[indicatorId],
     }));
+    setCheckpointResult(null);
+  };
+
+  // 3-Tier Hint Ladder texts
+  const hintTiers = [
+    { tier: 1 as const, title: 'Tier 1: Conceptual Rule', text: 'Examine cryptographic headers (SPF/DKIM/DMARC) and look for discrepancies between From and Return-Path.' },
+    { tier: 2 as const, title: 'Tier 2: Investigation Approach', text: 'Look at the sender domain extension (.invalid) and evaluate macro payload scripts spawned under excel.exe.' },
+    { tier: 3 as const, title: 'Tier 3: Exact Indicator Targets', text: 'Flag lookalike domain (@fintechcorp-secure.invalid), Return-Path bounce mismatch, failed SPF/DKIM, and urgency coercions.' },
+  ];
+
+  const handleUnlockHint = (tier: 1 | 2 | 3) => {
+    if (unlockedHints.includes(tier) || sessionState !== 'Running') return;
+    setUnlockedHints((prev) => [...prev, tier]);
+    const penalty = hintCost(tier, 150);
+    setUserXP((prev) => Math.max(0, prev - penalty));
+  };
+
+  // Checkpoint Verifier
+  const handleVerifyCheckpoint = () => {
+    const flaggedRequired = activeCase.indicators.filter((ind) => ind.isFlagged);
+    const missingFlags = flaggedRequired.filter((ind) => !selectedIndicators[ind.id]);
+
+    if (missingFlags.length > 0) {
+      setCheckpointResult({
+        passed: false,
+        message: `Checkpoint Incomplete: Missing ${missingFlags.length} key suspicious indicator(s). Review Return-Path and cryptographic headers.`,
+      });
+    } else {
+      setCheckpointResult({
+        passed: true,
+        message: 'Checkpoint Verified: All primary attack indicators correctly identified. You may now submit your verdict.',
+      });
+    }
   };
 
   const handleSelectVerdict = (verdict: 'phishing' | 'legitimate' | 'escalate') => {
-    if (verdictSubmitted) return;
+    if (verdictSubmitted || sessionState !== 'Running') return;
+
+    // In self-service, enforce checkpoint verification before verdict
+    if (playMode === 'self-service' && (!checkpointResult || !checkpointResult.passed)) {
+      handleVerifyCheckpoint();
+      return;
+    }
+
     setUserVerdict(verdict);
     setVerdictSubmitted(true);
 
     const isCorrect = verdict === activeCase.correctVerdict;
     if (isCorrect) {
-      setUserXP((prev) => prev + 150);
+      const challengeXP = 150;
+      const penalty = totalHintPenalty(unlockedHints, challengeXP);
+      const earnedXP = challengeXP - penalty;
+
+      setUserXP((prev) => prev + earnedXP);
       setSkills((prev) => ({
         recon: Math.min(100, prev.recon + activeCase.radarImpact.recon),
         detection: Math.min(100, prev.detection + activeCase.radarImpact.detection),
@@ -77,25 +146,46 @@ export default function IndividualsPage() {
   };
 
   const handleFileReport = () => {
+    if (sessionState !== 'Running') return;
     setReportFiled(true);
     setUserXP((prev) => prev + 50);
   };
 
   const handleNextCase = () => {
+    if (sessionState !== 'Running') return;
     if (currentCaseIndex < INDIVIDUALS_CONTENT.cases.length - 1) {
       setCurrentCaseIndex((prev) => prev + 1);
       setSelectedIndicators({});
       setVerdictSubmitted(false);
       setUserVerdict(null);
       setReportFiled(false);
+      setUnlockedHints([]);
+      setCheckpointResult(null);
     }
+  };
+
+  const handleRequestReview = () => {
+    setShowReviewToast(true);
+    setTimeout(() => setShowReviewToast(false), 4500);
   };
 
   const isCaseCorrect = userVerdict === activeCase.correctVerdict;
 
+  // Adaptive Skill Tree rule-based recommendation
+  const skillValues = Object.values(skills);
+  const minSkill = Math.min(...skillValues);
+  const allAbove70 = skillValues.every((val) => val >= 70);
+
+  const recommendedModule = minSkill < 40
+    ? { title: 'Foundational Email & Header Triage (Tier 1)', rule: 'Triggered because lowest skill rating is under 40.' }
+    : allAbove70
+    ? { title: 'Advanced Active Directory Kerberoasting & Lateral Pivoting (Lead)', rule: 'Triggered because all radar skill competencies exceed 70.' }
+    : { title: 'Multi-Stage Host Containment & Token Revocation (Tier 2)', rule: 'Intermediate progression track matching your current radar balance.' };
+
   return (
     <div className="bg-[#09090B] text-text min-h-screen py-10 sm:py-16 selection:bg-teal/30 selection:text-white">
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-16">
+        
         {/* Hero Section */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="flex justify-center items-center gap-2">
@@ -116,12 +206,75 @@ export default function IndividualsPage() {
           </p>
         </div>
 
+        {/* PLAY-MODE SWITCH */}
+        <section>
+          <PlayModeSwitch
+            mode={playMode}
+            onModeChange={setPlayMode}
+            showComparisonTable={true}
+          />
+        </section>
+
+        {/* Facilitator Mode Banner & Instructor Review Toast */}
+        {playMode === 'facilitator-led' && (
+          <div className="space-y-3 font-mono text-xs">
+            <div className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              sessionState === 'Running'
+                ? 'bg-teal/10 border-teal/40 text-teal'
+                : sessionState === 'Paused by instructor'
+                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                : 'bg-coral/10 border-coral/40 text-coral'
+            }`}>
+              <div className="flex items-center gap-2 font-bold">
+                <ShieldAlert className="w-4 h-4 shrink-0" />
+                <span>CLASSROOM SESSION STATE: {sessionState.toUpperCase()}</span>
+                {sessionState !== 'Running' && <span className="text-[10px] bg-black/30 px-2 py-0.5 rounded">(Inputs Disabled)</span>}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSessionState('Running')}
+                  className={`px-2.5 py-1 rounded text-[11px] ${sessionState === 'Running' ? 'bg-teal text-black font-bold' : 'bg-[#181820] text-muted'}`}
+                >
+                  Running
+                </button>
+                <button
+                  onClick={() => setSessionState('Paused by instructor')}
+                  className={`px-2.5 py-1 rounded text-[11px] ${sessionState === 'Paused by instructor' ? 'bg-amber-400 text-black font-bold' : 'bg-[#181820] text-muted'}`}
+                >
+                  Pause
+                </button>
+                <button
+                  onClick={() => setSessionState('Locked')}
+                  className={`px-2.5 py-1 rounded text-[11px] ${sessionState === 'Locked' ? 'bg-coral text-white font-bold' : 'bg-[#181820] text-muted'}`}
+                >
+                  Lock
+                </button>
+                <button
+                  onClick={handleRequestReview}
+                  className="px-3 py-1 rounded bg-[#201A24] border border-[#382E40] hover:border-teal text-text text-[11px] ml-2"
+                >
+                  Request Review
+                </button>
+              </div>
+            </div>
+
+            {showReviewToast && (
+              <div className="p-3 rounded-xl bg-teal/15 border border-teal text-teal text-xs flex items-center justify-between animate-in fade-in">
+                <span>Concept notice: Shares your live session with the facilitator.</span>
+                <span className="text-[10px] text-muted">No network call in concept preview</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 3.1 & 3.2 ANALYST WORKSTATION & MINI-GAME */}
-        <section className="bg-[#0D0E12] rounded-2xl border border-border overflow-hidden shadow-2xl space-y-0">
+        <section className={`bg-[#0D0E12] rounded-2xl border border-border overflow-hidden shadow-2xl space-y-0 ${
+          sessionState !== 'Running' ? 'opacity-65 pointer-events-none' : ''
+        }`}>
           {/* Workstation Top Bar */}
           <div className="bg-[#121217] px-4 sm:px-6 py-3 border-b border-[#26262C] flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
             <div className="flex items-center gap-4">
-              {/* Shift Clock */}
               <div className="flex items-center gap-1.5 text-muted">
                 <Clock className="w-3.5 h-3.5 text-teal" />
                 <span>{INDIVIDUALS_CONTENT.workstation.shift}</span>
@@ -129,7 +282,6 @@ export default function IndividualsPage() {
 
               <div className="h-4 w-px bg-[#26262C] hidden sm:block" />
 
-              {/* Callsign Chip */}
               <button
                 onClick={() => setCallsignIndex((prev) => (prev + 1) % INDIVIDUALS_CONTENT.workstation.callsigns.length)}
                 className="flex items-center gap-1.5 text-text hover:text-teal transition-colors"
@@ -142,14 +294,13 @@ export default function IndividualsPage() {
 
               <div className="h-4 w-px bg-[#26262C] hidden sm:block" />
 
-              {/* Rank Chip */}
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface border border-border text-[11px] text-teal">
-                <Shield className="w-3 h-3" />
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface border border-border text-[11px] text-teal whitespace-nowrap">
+                <Shield className="w-3 h-3 shrink-0" />
                 <span>{INDIVIDUALS_CONTENT.workstation.initialRank}</span>
               </div>
             </div>
 
-            {/* Right: XP Bar & Streak */}
+            {/* Right: XP Bar */}
             <div className="w-full sm:w-72">
               <XPBar
                 currentXP={userXP}
@@ -163,8 +314,9 @@ export default function IndividualsPage() {
 
           {/* Main 3-Pane Workstation Interface */}
           <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#26262C]">
-            {/* Left Rail: Case Queue (3 cols) */}
-            <div className="lg:col-span-3 p-4 bg-[#0A0A0D] space-y-3 font-mono text-xs select-none">
+            
+            {/* Left Rail: Case Queue & Benchmark (3 cols) */}
+            <div className="lg:col-span-3 p-4 bg-[#0A0A0D] space-y-4 font-mono text-xs select-none">
               <div className="flex items-center justify-between pb-2 border-b border-[#26262C]">
                 <span className="font-bold text-text uppercase tracking-wider text-[11px]">ACTIVE CASE QUEUE</span>
                 <span className="text-[10px] text-teal">2 Open Tickets</span>
@@ -182,6 +334,8 @@ export default function IndividualsPage() {
                         setVerdictSubmitted(false);
                         setUserVerdict(null);
                         setReportFiled(false);
+                        setUnlockedHints([]);
+                        setCheckpointResult(null);
                       }}
                       className={`p-3 rounded-xl border cursor-pointer transition-all ${
                         isSelected
@@ -215,16 +369,40 @@ export default function IndividualsPage() {
                 })}
               </div>
 
-              {/* Triage Guidance */}
-              <div className="p-3 rounded-xl bg-[#121217] border border-[#26262C] text-[11px] font-sans text-muted space-y-1">
-                <span className="font-mono text-text font-semibold block text-[11px]">Operator Instructions:</span>
-                <p className="leading-snug">
-                  Inspect the email headers and execution telemetry in the center pane. Tag all anomalous indicators, then file your verdict.
-                </p>
-              </div>
+              {/* Classroom Benchmark Sidebar (Visible in Facilitator mode) */}
+              {playMode === 'facilitator-led' && (
+                <div className="p-3.5 rounded-xl bg-[#121218] border border-[#26262C] space-y-2.5">
+                  <span className="text-[10.5px] uppercase tracking-wider text-teal font-bold block">
+                    Classroom Benchmark (Synthetic)
+                  </span>
+                  <div className="space-y-1.5 text-[10.5px]">
+                    <div>
+                      <div className="flex justify-between text-muted mb-0.5">
+                        <span>Cohort Accuracy:</span>
+                        <span className="text-text font-bold">88%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#1A1A22] rounded-full overflow-hidden">
+                        <div className="h-full bg-teal rounded-full" style={{ width: '88%' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-muted mb-0.5">
+                        <span>Avg Triage Time:</span>
+                        <span className="text-text font-bold">42s</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#1A1A22] rounded-full overflow-hidden">
+                        <div className="h-full bg-coral rounded-full" style={{ width: '65%' }} />
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[9.5px] text-muted/60 italic block pt-1">
+                    Illustrative aggregate cohort benchmark.
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Center Pane: Case Investigation & Triage Mini-Game (6 cols) */}
+            {/* Center Pane: Case Investigation & Mini-Game (6 cols) */}
             <div className="lg:col-span-6 p-4 sm:p-6 bg-[#0E0E12] space-y-5">
               {/* Ticket Header */}
               <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#26262C]">
@@ -264,7 +442,6 @@ export default function IndividualsPage() {
                   <div><strong className="text-text">Timestamp:</strong> {activeCase.email.date}</div>
                 </div>
 
-                {/* Email Body */}
                 <div className="p-3 rounded-lg bg-[#0A0A0D] border border-[#26262C] font-sans text-xs text-[#D1D5DB] whitespace-pre-line leading-relaxed">
                   {activeCase.email.body}
                 </div>
@@ -292,6 +469,49 @@ export default function IndividualsPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Self-Service 3-Tier Hint Ladder */}
+              {playMode === 'self-service' && (
+                <div className="p-4 rounded-xl bg-[#111116] border border-[#26262C] space-y-3 font-mono text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-text font-bold">
+                      <Lightbulb className="w-4 h-4 text-amber-400" />
+                      <span>3-TIER HINT LADDER</span>
+                    </div>
+                    <span className="text-[11px] text-muted">
+                      Hints used: <strong className="text-amber-400">{unlockedHints.length}/3</strong> (penalty capped at 50%)
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {hintTiers.map((ht) => {
+                      const isUnlocked = unlockedHints.includes(ht.tier);
+                      const cost = hintCost(ht.tier, 150);
+
+                      return (
+                        <div key={ht.tier} className="p-2.5 rounded-lg bg-[#16161D] border border-border flex items-start justify-between gap-3">
+                          <div>
+                            <span className="text-[11px] font-bold text-text block mb-0.5">{ht.title}</span>
+                            <p className="text-[11.5px] font-sans text-muted">
+                              {isUnlocked ? ht.text : 'Click reveal to view coaching hint.'}
+                            </p>
+                          </div>
+                          {!isUnlocked ? (
+                            <button
+                              onClick={() => handleUnlockHint(ht.tier)}
+                              className="px-2.5 py-1 rounded bg-[#20202A] hover:bg-amber-500/20 hover:text-amber-300 text-muted text-[10.5px] shrink-0 border border-[#26262C] transition-colors"
+                            >
+                              Reveal (-{cost} XP)
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-amber-400 font-bold shrink-0">Revealed</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Indicator Checklist */}
               <div className="p-4 rounded-xl bg-[#121217] border border-[#26262C] space-y-3 font-sans">
@@ -328,6 +548,32 @@ export default function IndividualsPage() {
                     );
                   })}
                 </div>
+
+                {/* Checkpoint Verifier Button */}
+                {!verdictSubmitted && (
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#26262C]">
+                    <span className="text-[11px] font-mono text-muted">
+                      Verify tags before submitting your verdict.
+                    </span>
+                    <button
+                      onClick={handleVerifyCheckpoint}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#181822] border border-teal/40 hover:border-teal text-teal font-mono text-xs font-bold transition-colors flex items-center gap-1.5"
+                    >
+                      <CheckSquare className="w-3.5 h-3.5" />
+                      <span>Verify Checkpoint</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Checkpoint Result Notice */}
+                {checkpointResult && (
+                  <div className={`p-3 rounded-lg border text-xs font-mono flex items-center gap-2 ${
+                    checkpointResult.passed ? 'bg-teal/15 border-teal text-teal' : 'bg-coral/15 border-coral text-coral'
+                  }`}>
+                    {checkpointResult.passed ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                    <span>{checkpointResult.message}</span>
+                  </div>
+                )}
               </div>
 
               {/* Verdict Selection & Action */}
@@ -341,7 +587,7 @@ export default function IndividualsPage() {
                       onClick={() => handleSelectVerdict('phishing')}
                       className="py-2.5 px-3 rounded-xl bg-coral/15 border border-coral text-coral font-heading font-bold text-xs hover:bg-coral hover:text-white transition-all shadow-sm"
                     >
-                      Malicious Phish
+                      Phishing Lure
                     </button>
                     <button
                       onClick={() => handleSelectVerdict('legitimate')}
@@ -427,8 +673,9 @@ export default function IndividualsPage() {
               )}
             </div>
 
-            {/* Right Rail: SkillRadar & Career Track (3 cols) */}
+            {/* Right Rail: SkillRadar & Adaptive Skill Tree (3 cols) */}
             <div className="lg:col-span-3 p-4 bg-[#0A0A0D] space-y-6 select-none font-mono text-xs">
+              
               {/* Radar Chart */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between pb-1 border-b border-[#26262C]">
@@ -439,6 +686,33 @@ export default function IndividualsPage() {
                   <SkillRadar skills={skills} size={210} />
                 </div>
               </div>
+
+              {/* Adaptive Skill Tree Recommendation */}
+              <div className="space-y-2 pt-2 border-t border-[#26262C]">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-text uppercase tracking-wider text-[11px]">
+                    ADAPTIVE CURRICULUM
+                  </span>
+                  <span className="text-[9.5px] text-teal" title={recommendedModule.rule}>Rule-Based (?)</span>
+                </div>
+                <div className="p-3 rounded-lg bg-[#14141B] border border-border space-y-1">
+                  <span className="text-[10px] text-muted block uppercase">Recommended Next:</span>
+                  <span className="font-bold text-text text-[11px] block leading-snug">{recommendedModule.title}</span>
+                  <span className="text-[10px] text-muted/70 block font-sans italic pt-1">{recommendedModule.rule}</span>
+                </div>
+              </div>
+
+              {/* Shift Retrospective Summary Card (Visible after completion) */}
+              {reportFiled && currentCaseIndex === INDIVIDUALS_CONTENT.cases.length - 1 && (
+                <div className="p-3 rounded-xl bg-teal/10 border border-teal/40 space-y-2">
+                  <span className="font-bold text-teal text-[11px] block uppercase">Shift Retrospective</span>
+                  <div className="text-[11px] space-y-0.5 text-muted">
+                    <div>Final XP: <strong className="text-text">{userXP}</strong></div>
+                    <div>Hints Used: <strong className="text-text">{unlockedHints.length}</strong></div>
+                    <div>Missed Flags: <strong className="text-text">0</strong></div>
+                  </div>
+                </div>
+              )}
 
               {/* Role-Track Switcher */}
               <div className="space-y-2 pt-2 border-t border-[#26262C]">
@@ -478,23 +752,6 @@ export default function IndividualsPage() {
                   </button>
                 </div>
               </div>
-
-              {/* Recent Badges */}
-              <div className="space-y-2 pt-2 border-t border-[#26262C]">
-                <span className="font-bold text-text uppercase tracking-wider text-[11px] block">
-                  SESSION BADGES
-                </span>
-                <div className="space-y-1.5 text-[11px]">
-                  <div className="p-2 rounded-lg bg-[#14141B] border border-border flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-teal" />
-                    <span>Header Sentry (SPF / DKIM)</span>
-                  </div>
-                  <div className="p-2 rounded-lg bg-[#14141B] border border-border flex items-center gap-2">
-                    <Flame className="w-3.5 h-3.5 text-coral" />
-                    <span>Rapid Triage (&lt; 2 min)</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -511,7 +768,7 @@ export default function IndividualsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {INDIVIDUALS_CONTENT.careerLadder.map((tier, idx) => (
+            {INDIVIDUALS_CONTENT.careerLadder.map((tier) => (
               <div
                 key={tier.level}
                 className="bg-surface p-6 rounded-2xl border border-border hover:border-teal/40 transition-all space-y-4"
@@ -555,7 +812,7 @@ export default function IndividualsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-4">
-            {INDIVIDUALS_CONTENT.dayOnTheRange.map((st, idx) => (
+            {INDIVIDUALS_CONTENT.dayOnTheRange.map((st) => (
               <div
                 key={st.step}
                 className="p-4 rounded-xl bg-[#0F0F14] border border-[#26262C] space-y-2 text-left"
@@ -600,6 +857,7 @@ export default function IndividualsPage() {
             </Link>
           </div>
         </section>
+
       </div>
     </div>
   );

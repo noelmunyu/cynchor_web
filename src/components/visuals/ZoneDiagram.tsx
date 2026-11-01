@@ -1,70 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Shield, ShieldAlert, ArrowRight, Play, CheckCircle2, XCircle } from 'lucide-react';
-
-export interface TrustZone {
-  id: string;
-  name: string;
-  subnet: string;
-  role: string;
-  controls: string[];
-  blocks: string[];
-}
+import { Shield, ShieldAlert, Play, CheckCircle2, XCircle } from 'lucide-react';
+import { ZONES_CONTENT, ZoneItem } from '@/content/zones';
 
 interface ZoneDiagramProps {
   className?: string;
 }
 
 export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
+  // Render ONLY verified zones
+  const verifiedZones: ZoneItem[] = ZONES_CONTENT.filter((z) => z.verified);
   const [activeZone, setActiveZone] = useState<string>('range');
   const [isProbing, setIsProbing] = useState<boolean>(false);
   const [probeStage, setProbeStage] = useState<'idle' | 'in-flight' | 'blocked' | 'contained'>('idle');
 
-  const zones: TrustZone[] = [
-    {
-      id: 'public',
-      name: 'Public Website',
-      subnet: 'Internet / Edge CDN',
-      role: 'Marketing pages, static documentation, and access request form.',
-      controls: ['CSP and HSTS headers', 'Cross-origin write blocking', 'RFC 9116 security.txt'],
-      blocks: ['Direct DB access', 'Internal RPC calls', 'Arbitrary file upload'],
-    },
-    {
-      id: 'auth',
-      name: 'Auth Gateway',
-      subnet: 'DMZ Auth Proxy',
-      role: 'Operator authentication, single-use invite verification, and session token issuance.',
-      controls: ['CSPRNG 256-bit hashed tokens', 'Rate-limiting & lockout backoff', 'HttpOnly SameSite cookies'],
-      blocks: ['Unauthenticated access', 'Brute-force password guessing', 'User enumeration'],
-    },
-    {
-      id: 'app',
-      name: 'Application Tier',
-      subnet: '10.0.10.0/24',
-      role: 'Core business logic, team rosters, and queue dispatching.',
-      controls: ['Zod schema validation', 'Parameterized queries', 'RBAC permission checks'],
-      blocks: ['SQL injection', 'Payload tampering', 'Malformed and oversized payloads'],
-    },
-    {
-      id: 'range',
-      name: 'Isolated Training Range',
-      subnet: '10.0.0.0/16 (SDN)',
-      role: 'Ephemeral Proxmox SDN virtual environments running synthetic targets (fintechcorp.local).',
-      controls: ['Per-student VLAN isolation', 'Zero production routing', '100% synthetic mock datasets'],
-      blocks: ['Internet egress leakage', 'Cross-exercise snooping', 'Real customer data ingestion'],
-    },
-    {
-      id: 'monitoring',
-      name: 'Monitoring / SOC Tap',
-      subnet: '10.0.99.0/24',
-      role: 'One-way mirrored telemetry collection, audit logging, and SIEM ingestion.',
-      controls: ['Append-only SQLite audit log', 'SHA-256 IP hashing', 'Read-only administrative tap'],
-      blocks: ['Application-level log edits', 'Application-level log deletion', 'Raw IP leakage'],
-    },
-  ];
-
-  const currentZoneData = zones.find((z) => z.id === activeZone) || zones[3];
+  const currentZoneData = verifiedZones.find((z) => z.id === activeZone) || verifiedZones[0];
 
   const triggerAttackProbe = () => {
     if (isProbing) return;
@@ -93,7 +44,7 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
             <span>Layered Defense-in-Depth Trust Zones</span>
           </h3>
           <p className="text-xs text-muted font-sans mt-0.5">
-            Strict directional boundaries. Training range is completely isolated from app and public tiers.
+            Strict directional boundaries. Training range is isolated from application logic with verified controls only.
           </p>
         </div>
 
@@ -113,35 +64,31 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
 
       {/* SVG Flow / Diagram */}
       <div className="relative w-full aspect-[780/160] overflow-hidden rounded-xl bg-[#08080A] border border-[#26262C]/60 p-2">
-        <svg viewBox="0 0 780 160" className="w-full h-full">
-          {/* Arrow markers */}
+        <svg viewBox="0 0 780 160" className="w-full h-full" role="img" aria-label="Defense-in-depth architecture zones diagram">
+          <title>Defense in Depth Trust Boundaries</title>
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#17ABA9" />
             </marker>
-            <marker id="arrow-coral" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#EA694B" />
-            </marker>
           </defs>
 
-          {/* Connectors between zones */}
+          {/* Connectors between verified zones */}
           <g stroke="#26262C" strokeWidth="1.5">
-            <line x1="135" y1="75" x2="165" y2="75" markerEnd="url(#arrow)" />
-            <line x1="285" y1="75" x2="315" y2="75" markerEnd="url(#arrow)" />
-            <line x1="435" y1="75" x2="465" y2="75" markerEnd="url(#arrow)" />
-            <line x1="585" y1="75" x2="615" y2="75" markerEnd="url(#arrow)" />
+            <line x1="165" y1="75" x2="215" y2="75" markerEnd="url(#arrow)" />
+            <line x1="365" y1="75" x2="415" y2="75" markerEnd="url(#arrow)" />
+            <line x1="565" y1="75" x2="615" y2="75" markerEnd="url(#arrow)" />
           </g>
 
           {/* Animated probe travelling */}
           {probeStage === 'in-flight' && (
             <circle cx="20" cy="75" r="4.5" fill="#EA694B">
-              <animate attributeName="cx" from="50" to="465" dur="1.3s" fill="freeze" />
+              <animate attributeName="cx" from="40" to="415" dur="1.3s" fill="freeze" />
             </circle>
           )}
 
           {/* Blocked pulse at boundary */}
           {probeStage === 'blocked' && (
-            <g transform="translate(465, 75)">
+            <g transform="translate(415, 75)">
               <circle r="14" fill="none" stroke="#EA694B" strokeWidth="2" className="animate-ping" />
               <circle r="8" fill="#EA694B" />
             </g>
@@ -149,15 +96,15 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
 
           {/* Contained return pulse */}
           {probeStage === 'contained' && (
-            <circle cx="465" cy="75" r="5" fill="#17ABA9">
-              <animate attributeName="cx" from="465" to="690" dur="1.1s" fill="freeze" />
+            <circle cx="415" cy="75" r="5" fill="#17ABA9">
+              <animate attributeName="cx" from="415" to="690" dur="1.1s" fill="freeze" />
             </circle>
           )}
 
-          {/* Interactive Zone Containers */}
-          {zones.map((zone, idx) => {
+          {/* Interactive Zone Containers (4 verified zones) */}
+          {verifiedZones.map((zone, idx) => {
             const isSelected = activeZone === zone.id;
-            const x = 15 + idx * 150;
+            const x = 20 + idx * 195;
 
             return (
               <g
@@ -170,7 +117,7 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
                 <rect
                   x="0"
                   y="0"
-                  width="120"
+                  width="150"
                   height="110"
                   rx="10"
                   fill={isSelected ? '#14141A' : '#0F0F13'}
@@ -181,59 +128,48 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
 
                 {/* Subnet label */}
                 <text
-                  x="60"
+                  x="75"
                   y="20"
                   textAnchor="middle"
                   fill="#71717A"
-                  fontSize="8.5"
+                  fontSize="8"
                   fontFamily="monospace"
                 >
-                  {zone.subnet}
+                  {zone.subnet.length > 24 ? zone.subnet.slice(0, 22) + '…' : zone.subnet}
                 </text>
 
                 {/* Zone name */}
                 <text
-                  x="60"
-                  y="46"
+                  x="75"
+                  y="48"
                   textAnchor="middle"
                   fill={isSelected ? '#E5E6E6' : '#A1A1AA'}
-                  fontSize="10"
+                  fontSize="11"
                   fontWeight="600"
                   fontFamily="sans-serif"
                 >
-                  {zone.name.split(' ')[0]}
-                </text>
-                <text
-                  x="60"
-                  y="58"
-                  textAnchor="middle"
-                  fill={isSelected ? '#E5E6E6' : '#A1A1AA'}
-                  fontSize="10"
-                  fontWeight="600"
-                  fontFamily="sans-serif"
-                >
-                  {zone.name.split(' ').slice(1).join(' ')}
+                  {zone.name}
                 </text>
 
                 {/* Status indicator */}
                 <rect
-                  x="30"
-                  y="78"
-                  width="60"
+                  x="42"
+                  y="74"
+                  width="66"
                   height="18"
                   rx="9"
                   fill={isSelected ? '#17ABA9' : '#1A1A22'}
                 />
                 <text
-                  x="60"
-                  y="90"
+                  x="75"
+                  y="86"
                   textAnchor="middle"
                   fill={isSelected ? '#09090B' : '#71717A'}
-                  fontSize="8"
+                  fontSize="8.5"
                   fontWeight="bold"
                   fontFamily="monospace"
                 >
-                  {isSelected ? 'ACTIVE' : 'ISOLATED'}
+                  {isSelected ? 'ACTIVE' : 'VERIFIED'}
                 </text>
               </g>
             );
@@ -247,8 +183,8 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4" />
             <span>
-              {probeStage === 'in-flight' && 'Probe traversing external perimeter -> blocked at range boundary.'}
-              {probeStage === 'blocked' && 'Boundary SDN firewall dropped unauthenticated egress frame.'}
+              {probeStage === 'in-flight' && 'Probe traversing external perimeter -> blocked at boundary.'}
+              {probeStage === 'blocked' && 'Application boundary firewall dropped unauthenticated frame.'}
               {probeStage === 'contained' && 'Telemetry alert dispatched to Monitoring/SOC tap. Zero lateral leak.'}
             </span>
           </div>
@@ -300,4 +236,3 @@ export function ZoneDiagram({ className = '' }: ZoneDiagramProps) {
     </div>
   );
 }
-

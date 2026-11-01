@@ -73,3 +73,46 @@ export interface SimState {
   mttdSeconds: number;
 }
 
+// v1.3 Engine extensions
+export interface Hint {
+  tier: 1 | 2 | 3;
+  text: string;
+}
+
+export interface Checkpoint {
+  id: string;
+  requires: string[];
+  passMsg: string;
+  failMsg: string;
+}
+
+export interface Inject {
+  id: string;
+  label: string;
+  t: number;
+  effects: string[];
+  description?: string;
+}
+
+export interface BotStep {
+  id: string;
+  technique: string;
+  advanceOn: 'detected' | 'timeout';
+  timeoutSec: number;
+  detail?: string;
+}
+
+export interface TeamVariant {
+  id: string;
+  name: string;
+  blueDelaySec: number;
+  missedTechniques: string[];
+}
+
+export interface RetrospectiveReport {
+  mttdSec: number | null;
+  containmentSec: number | null;
+  missedTechniques: string[];
+  pipelineLatencySec: number;
+  remediation: string[];
+}

@@ -26,6 +26,8 @@ export const accessRequestSchema = z.object({
     .toLowerCase()
     .email({ message: 'A valid email address is required' })
     .max(255, { message: 'Email address exceeds maximum length' }),
+  source: z.enum(['demo', 'pilot']).default('demo').optional(),
+  website: z.string().max(0, { message: 'Bot detected' }).optional(),
 });
 
 export const inviteTokenSchema = z.object({

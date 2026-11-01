@@ -117,7 +117,8 @@ export function NetworkMap({
 
       {/* SVG Network Topology */}
       <div className="relative w-full aspect-[600/260]">
-        <svg viewBox="0 0 600 260" className="w-full h-full overflow-visible">
+        <svg viewBox="0 0 600 260" className="w-full h-full overflow-visible" role="img" aria-label="Battle network topology map of fintechcorp.local">
+          <title>Network Topology Map fintechcorp.local</title>
           {/* Edges */}
           {edges.map((edge, idx) => {
             const start = nodes.find(n => n.id === edge.from)!;

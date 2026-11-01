@@ -258,6 +258,10 @@ function initSchema(db: DatabaseSync) {
     db.exec(`ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0;`);
   } catch {}
 
+  try {
+    db.exec(`ALTER TABLE access_requests ADD COLUMN source TEXT NOT NULL DEFAULT 'demo';`);
+  } catch {}
+
   // Seed default operator and seed accounts if empty
   const countStmt = db.prepare('SELECT COUNT(*) as count FROM users');
   const countResult = countStmt.get() as { count: number };

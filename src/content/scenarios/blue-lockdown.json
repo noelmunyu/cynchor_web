@@ -91,7 +91,7 @@
         "title": "Proactive Isolation & C2 Sinkholing",
         "description": "SOC applies Proxmox SDN firewall drop rule and sinkholes adversary C2 callback domain.",
         "mitre": "T1071.001",
-        "cmd": "pve-firewall ipset add quarantined_hosts 10.0.2.42; dns_sinkhole add evil-fintechcorp.fake",
+        "cmd": "pve-firewall ipset add quarantined_hosts 10.0.2.42; dns_sinkhole add evil-fintechcorp.invalid",
         "log": "Core Router: 0 packets leaked. Attack chain broken at delivery stage.",
         "mttd": 10,
         "attackerMove": "Callback attempts fail; host unreachable.",

@@ -33,20 +33,20 @@ export function XPBar({
   return (
     <div className={`space-y-1.5 select-none font-mono ${className}`}>
       {showDetails && (
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-teal font-semibold">
-              <Award className="w-3.5 h-3.5" />
+        <div className="flex items-center justify-between text-xs whitespace-nowrap">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="flex items-center gap-1 text-teal font-semibold whitespace-nowrap">
+              <Award className="w-3.5 h-3.5 shrink-0" />
               <span>{rank}</span>
             </span>
             {streak > 0 && (
-              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-coral/10 text-coral text-[10px] font-bold">
-                <Flame className="w-3 h-3 fill-coral" />
+              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-coral/10 text-coral text-[10px] font-bold shrink-0">
+                <Flame className="w-3 h-3 fill-coral shrink-0" />
                 <span>{streak}d streak</span>
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-muted text-[11px]">
+          <div className="flex items-center gap-1.5 text-muted text-[11px] shrink-0 ml-2">
             <Zap className="w-3 h-3 text-amber-400" />
             <span className="text-text font-bold">{currentXP.toLocaleString()}</span>
             <span>/ {maxXP.toLocaleString()} XP</span>

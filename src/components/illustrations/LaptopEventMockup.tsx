@@ -114,7 +114,7 @@ export function LaptopEventMockup() {
   // 0.30s: wipe-reveal (top to bottom wipe over 1000ms)
   // 1.30s: sheen-pulse (diagonal sheen & anchor ring pulse)
   // 1.50s: lockup (mark eases left, Cynchor wordmark slides in)
-  // 2.00s: tagline (LIVE CYBER RANGE fades in)
+  // 2.00s: tagline (Slogan "Simulating reality to secure the future" fades in)
   // 2.50s: fading-out (scales 0.94 and fades out over 300ms)
   // 2.80s: ready (simulation begins)
   const [bootPhase, setBootPhase] = useState<'power-on' | 'wipe-reveal' | 'sheen-pulse' | 'lockup' | 'tagline' | 'fading-out' | 'ready'>('power-on');
@@ -203,9 +203,35 @@ export function LaptopEventMockup() {
     setBootSkipped(true);
   }, []);
 
+  // Pause simulation when off-screen or tab is hidden
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting && !document.hidden);
+      },
+      { threshold: 0.1 }
+    );
+
+    if (screenRef.current) {
+      observer.observe(screenRef.current);
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      observer.disconnect();
+    };
+  }, []);
+
   // SIMULATION TICKER
   useEffect(() => {
-    if (bootPhase !== 'ready' || !isPlaying || pinnedDetail !== null || activeView !== 'live-range') {
+    if (bootPhase !== 'ready' || !isPlaying || !isVisible || pinnedDetail !== null || activeView !== 'live-range') {
       return;
     }
 

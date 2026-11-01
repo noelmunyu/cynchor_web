@@ -1,15 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/common/Badge';
 import { useRangeSim } from '@/lib/rangeSim';
+import { withBlueDelay } from '@/lib/rangeSim/variants';
+import { AdversaryBotRunner } from '@/lib/rangeSim/bot';
+import { retrospective } from '@/lib/rangeSim/scoring';
+import { BotStep, RetrospectiveReport } from '@/lib/rangeSim/types';
 import { NetworkMap } from '@/components/visuals/NetworkMap';
 import { KillChain } from '@/components/visuals/KillChain';
 import { AlertQueue, SOCAlert } from '@/components/visuals/AlertQueue';
 import { LogStream, LogLine } from '@/components/visuals/LogStream';
 import { TerminalPane } from '@/components/visuals/TerminalPane';
+import { PlayModeSwitch } from '@/components/visuals/PlayModeSwitch';
 import { TEAMS_CONTENT } from '@/content/teams';
+import { SYNTHETIC_INJECTS, PlayMode } from '@/content/modes';
 import {
   Play,
   Pause,
@@ -28,22 +34,15 @@ import {
   Flame,
   ArrowRight,
   Sparkles,
+  Printer,
+  Sliders,
+  AlertTriangle,
+  Bot,
+  Lock,
 } from 'lucide-react';
 
 export default function TeamsPage() {
-  const {
-    state,
-    scenario,
-    play,
-    pause,
-    step,
-    seek,
-    setSpeed,
-    switchScenario,
-    makeDecision,
-  } = useRangeSim('red-breakthrough', false);
-
-  // UI View States
+  const [playMode, setPlayMode] = useState<PlayMode>('self-service');
   const [activeMobileTab, setActiveMobileTab] = useState<'red' | 'battle' | 'blue'>('battle');
   const [viewMode, setViewMode] = useState<'split' | 'red' | 'blue'>('split');
   const [selectedEntity, setSelectedEntity] = useState<{
@@ -58,6 +57,105 @@ export default function TeamsPage() {
   // Matchmaking Explainer State
   const [matchmakingMode, setMatchmakingMode] = useState<'group' | 'solo'>('group');
   const [matchStep, setMatchStep] = useState<number>(3);
+
+  // Range Sim Engine hook
+  const {
+    state,
+    scenario,
+    play,
+    pause,
+    step,
+    seek,
+    setSpeed,
+    switchScenario,
+    makeDecision,
+  } = useRangeSim('red-breakthrough', false);
+
+  // Facilitator controls state
+  const [throttle, setThrottle] = useState<number>(1);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
+  const [activeInjectMessage, setActiveInjectMessage] = useState<string | null>(null);
+
+  // Read URL hash on mount if present (#facilitator-led / #self-service)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'facilitator-led' || hash === 'self-service') {
+        setPlayMode(hash as PlayMode);
+      }
+    }
+  }, []);
+
+  // Update engine speed with throttle
+  useEffect(() => {
+    setSpeed(throttle);
+  }, [throttle, setSpeed]);
+
+  // Derive 4 cohort teams via withBlueDelay
+  const cohortTeams = useMemo(() => {
+    const delays = [0, 6, 12, 18];
+    const names = ['Alpha Vanguard', 'Cobalt Guard', 'Sigma Sentry', 'Apex Shield'];
+    return delays.map((delay, idx) => {
+      const variant = withBlueDelay(scenario, delay, `cohort-${idx}`, names[idx]);
+      const status = state.currentTime >= 32 ? 'Contained' : state.currentTime >= (12 + delay) ? 'Alert Active' : 'Nominal';
+      const score = Math.max(80, variant.review.blueScore - Math.round(delay * 8));
+      return {
+        id: `cohort-${idx}`,
+        name: names[idx],
+        delay,
+        score,
+        status,
+        mttd: variant.review.mttd,
+        uptime: 100 - delay * 2,
+      };
+    });
+  }, [scenario, state.currentTime]);
+
+  // Orchestrated Adversary Bot (Self-service mode)
+  const botSteps: BotStep[] = useMemo(() => [
+    { id: 'b1', technique: 'T1087', advanceOn: 'detected', timeoutSec: 10, detail: 'Enumerating directory objects via LDAP' },
+    { id: 'b2', technique: 'T1566', advanceOn: 'detected', timeoutSec: 14, detail: 'Delivering macro spreadsheet payroll lure' },
+    { id: 'b3', technique: 'T1078', advanceOn: 'detected', timeoutSec: 12, detail: 'Extracting cached workstation token' },
+    { id: 'b4', technique: 'T1021.002', advanceOn: 'detected', timeoutSec: 15, detail: 'Executing remote SMB service pivot' },
+  ], []);
+
+  const botRunnerRef = useRef<AdversaryBotRunner>(new AdversaryBotRunner(botSteps));
+
+  useEffect(() => {
+    const runner = botRunnerRef.current;
+    if (state.currentTime === 0) {
+      runner.reset(0);
+    } else {
+      runner.evaluateTick(state.currentTime);
+    }
+  }, [state.currentTime]);
+
+  const currentBotStep = botRunnerRef.current.getCurrentStep();
+  const botState = botRunnerRef.current.getState();
+
+  // Handle Facilitator Injects
+  const handleTriggerInject = (injectId: string) => {
+    const inj = SYNTHETIC_INJECTS.find((i) => i.id === injectId);
+    if (!inj) return;
+    setActiveInjectMessage(`INJECT ACTIVE: ${inj.label} — ${inj.description}`);
+    setTimeout(() => setActiveInjectMessage(null), 5000);
+  };
+
+  // Skip next red vector
+  const handleSkipVector = () => {
+    step('forward');
+  };
+
+  // Retrospective Report
+  const retroReport: RetrospectiveReport = useMemo(() => {
+    return retrospective(state);
+  }, [state]);
+
+  const handlePrintReport = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
 
   // Current active event
   const currentEvent = state.activeEvents[state.activeEvents.length - 1];
@@ -75,7 +173,6 @@ export default function TeamsPage() {
       mitre: e.detail.mitre,
     }));
 
-  // Derive log lines
   const logLines: LogLine[] = state.activeEvents.map((e, idx) => ({
     id: `log-${idx}`,
     timestamp: `+00:${e.t.toString().padStart(2, '0')}`,
@@ -84,7 +181,6 @@ export default function TeamsPage() {
     isAnomalous: e.side === 'red',
   }));
 
-  // Terminal commands history
   const terminalHistory = state.activeEvents
     .filter((e) => e.side === 'red' && e.detail.cmd)
     .map((e) => e.detail.cmd!);
@@ -101,6 +197,8 @@ export default function TeamsPage() {
   };
 
   const handleSelectStep = (mitreId: string) => {
+    // Notify bot of detection
+    botRunnerRef.current.onBlueDetected(mitreId, state.currentTime);
     setSelectedEntity({
       type: 'technique',
       id: mitreId,
@@ -114,7 +212,7 @@ export default function TeamsPage() {
   return (
     <div className="bg-[#09090B] text-text min-h-screen py-10 sm:py-16 selection:bg-teal/30 selection:text-white">
       {/* Background Arc Watermark */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none opacity-10 overflow-hidden">
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none opacity-10 overflow-hidden" role="img" aria-label="Decorative watermark">
         <svg viewBox="0 0 800 400" className="w-full h-full">
           <circle cx="400" cy="400" r="320" fill="none" stroke="#17ABA9" strokeWidth="2" strokeDasharray="6 6" />
           <circle cx="400" cy="400" r="240" fill="none" stroke="#EA694B" strokeWidth="2" />
@@ -123,6 +221,7 @@ export default function TeamsPage() {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-16 relative z-10">
+        
         {/* Hero Section */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="flex justify-center items-center gap-2">
@@ -132,24 +231,152 @@ export default function TeamsPage() {
           </div>
 
           <h1 className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-text tracking-tightest">
-            Two sides. <span className="bg-gradient-to-r from-coral via-[#D88A6E] to-teal bg-clip-text text-transparent">One live range.</span>
+            Two sides. <span className="gradient-text font-black">One live range.</span>
           </h1>
 
           <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed font-sans">
             {TEAMS_CONTENT.hero.subtitle}
           </p>
 
-          {/* Split Red/Blue Seam */}
           <div className="pt-2 flex items-center justify-center">
             <div className="h-1 w-64 rounded-full bg-gradient-to-r from-coral via-transparent to-teal" />
           </div>
         </div>
 
+        {/* PLAY-MODE SWITCH */}
+        <section>
+          <PlayModeSwitch
+            mode={playMode}
+            onModeChange={setPlayMode}
+            showComparisonTable={true}
+          />
+        </section>
+
         {/* 2.1 LIVE BATTLE ARENA */}
         <section className="space-y-4">
+          
+          {/* Active Inject Notification Banner */}
+          {activeInjectMessage && (
+            <div className="p-3 rounded-xl bg-coral/15 border border-coral text-coral text-xs font-mono flex items-center gap-2 animate-bounce">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{activeInjectMessage}</span>
+            </div>
+          )}
+
+          {/* Facilitator-Led Controls Header (Visible when Facilitator-led active) */}
+          {playMode === 'facilitator-led' && (
+            <div className="p-4 rounded-2xl bg-[#141217] border border-coral/40 space-y-4 font-mono text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-coral/20 pb-3">
+                <div className="flex items-center gap-2 text-coral font-bold">
+                  <Sliders className="w-4 h-4" />
+                  <span>FACILITATOR GAME MASTER CONSOLE (CONCEPT PREVIEW)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted text-[11px]">Speed:</span>
+                  {[0.5, 1, 2, 4].map((spd) => (
+                    <button
+                      key={spd}
+                      onClick={() => setThrottle(spd)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                        throttle === spd ? 'bg-coral text-white border-coral' : 'bg-[#181820] text-muted border-[#26262C]'
+                      }`}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setIsLocked(!isLocked)}
+                    className={`px-3 py-1 rounded text-[11px] font-bold border ml-2 flex items-center gap-1 ${
+                      isLocked ? 'bg-amber-500 text-black border-amber-400' : 'bg-[#181820] text-muted border-[#26262C]'
+                    }`}
+                  >
+                    <Lock className="w-3 h-3" />
+                    <span>{isLocked ? 'Locked' : 'Unlocked'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Injects and Vector Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted">Inject Scenarios:</span>
+                  {SYNTHETIC_INJECTS.map((inj) => (
+                    <button
+                      key={inj.id}
+                      onClick={() => handleTriggerInject(inj.id)}
+                      className="px-2.5 py-1 rounded bg-[#1C1822] border border-coral/30 hover:border-coral text-coral text-[11px] transition-colors"
+                    >
+                      + {inj.label.split(':')[0]}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSkipVector}
+                    className="px-3 py-1 rounded bg-[#201A24] border border-[#382E40] hover:border-coral text-text text-[11px]"
+                  >
+                    Skip Next Vector →
+                  </button>
+                </div>
+              </div>
+
+              {/* 4-Cohort Team Grid */}
+              <div className="pt-2 border-t border-coral/20">
+                <span className="text-muted text-[10.5px] uppercase tracking-wider block mb-2">Live Cohort Status (4 Squads)</span>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                  {cohortTeams.map((tm) => (
+                    <div key={tm.id} className="p-2.5 rounded-lg bg-[#0F0D14] border border-[#26262C] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-text truncate text-[11px]">{tm.name}</span>
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                          tm.status === 'Contained' ? 'bg-teal/20 text-teal' : 'bg-coral/20 text-coral'
+                        }`}>
+                          {tm.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted">
+                        <span>Score: <strong className="text-teal">{tm.score}</strong></span>
+                        <span>MTTD: {tm.mttd}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Self-Service Adversary Bot Status (Visible when Self-service active) */}
+          {playMode === 'self-service' && (
+            <div className="p-4 rounded-2xl bg-[#0D1214] border border-teal/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
+              <div className="flex items-center gap-3">
+                <Bot className="w-5 h-5 text-teal shrink-0" />
+                <div>
+                  <div className="text-text font-bold flex items-center gap-2">
+                    <span>ORCHESTRATED ADVERSARY BOT:</span>
+                    <span className="text-teal">
+                      {currentBotStep ? `Active (${currentBotStep.technique})` : 'Playbook Finished'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-muted font-sans">
+                    {currentBotStep ? currentBotStep.detail : 'All adversary vectors completed or neutralized.'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 text-[11px]">
+                <span className="text-muted">
+                  Advance Trigger: <strong className="text-text">Detection or Timeout ({currentBotStep?.timeoutSec || 0}s)</strong>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-teal/15 text-teal border border-teal/30">
+                  Step {botState.currentStepIndex + 1} / {botSteps.length}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Arena Control Bar */}
           <div className="bg-[#111114] border border-[#26262C] rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-            {/* Left: Scenario Switcher */}
             <div className="flex items-center gap-2 font-mono text-xs">
               <span className="text-muted hidden sm:inline">Scenario:</span>
               <button
@@ -174,7 +401,7 @@ export default function TeamsPage() {
               </button>
             </div>
 
-            {/* Center: Play / Pause / Step / Replay Controls */}
+            {/* Play / Step / Replay Controls */}
             <div className="flex items-center gap-1.5 font-mono text-xs bg-[#09090B] p-1.5 rounded-xl border border-[#26262C]">
               <button
                 onClick={() => step('backward')}
@@ -185,8 +412,9 @@ export default function TeamsPage() {
                 <SkipBack className="w-3.5 h-3.5" />
               </button>
               <button
+                disabled={isLocked}
                 onClick={() => (state.isPlaying ? pause() : play())}
-                className={`px-3 py-1 rounded font-bold flex items-center gap-1.5 transition-colors ${
+                className={`px-3 py-1 rounded font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
                   state.isPlaying ? 'bg-amber-500/20 text-amber-400' : 'bg-teal text-black hover:bg-teal/90'
                 }`}
               >
@@ -212,22 +440,12 @@ export default function TeamsPage() {
 
               <div className="h-4 w-px bg-[#26262C] mx-1" />
 
-              {/* Speed toggle */}
-              <button
-                onClick={() => setSpeed(state.speed === 1 ? 2 : 1)}
-                className="px-2 py-0.5 rounded text-[11px] font-bold text-muted hover:text-teal"
-              >
-                {state.speed}x
-              </button>
-
-              <div className="h-4 w-px bg-[#26262C] mx-1" />
-
               <span className="text-[11px] text-muted px-1.5">
                 {Math.round(state.currentTime)}s / {scenario.duration}s
               </span>
             </div>
 
-            {/* Right: View mode switcher (Split / Attacker only / Defender only) */}
+            {/* View mode switcher */}
             <div className="flex items-center gap-1 font-mono text-xs">
               <span className="text-muted text-[11px] mr-1 hidden lg:inline">View:</span>
               {(['split', 'red', 'blue'] as const).map((mode) => (
@@ -274,6 +492,7 @@ export default function TeamsPage() {
 
           {/* Arena 3-Column Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
             {/* Column 1: RED OPERATOR CONSOLE */}
             <div
               className={`space-y-3 ${
@@ -300,7 +519,7 @@ export default function TeamsPage() {
               />
             </div>
 
-            {/* Column 2: BATTLE MAP */}
+            {/* Column 2: BATTLE MAP & DRAWER */}
             <div
               className={`space-y-3 ${
                 viewMode === 'split' ? 'lg:col-span-6' : 'lg:col-span-6'
@@ -376,7 +595,7 @@ export default function TeamsPage() {
                 alerts={socAlerts}
                 mttdSeconds={state.mttdSeconds}
                 onSelectAlert={(a) => handleSelectNode(a.source.split('.')[0])}
-                onContain={(id) => handleSelectNode('ws-402')}
+                onContain={() => handleSelectNode('ws-402')}
               />
 
               <LogStream logs={logLines} />
@@ -432,40 +651,63 @@ export default function TeamsPage() {
             </div>
           )}
 
-          {/* Round Review End Card */}
+          {/* Retrospective Report & Print Card (Self-service End-of-Run) */}
           {state.isCompleted && (
-            <div className="p-6 rounded-2xl bg-[#111116] border border-border space-y-4 select-none">
-              <div className="flex items-center justify-between">
+            <div className="p-6 rounded-2xl bg-[#111116] border border-border space-y-5 select-none print:bg-white print:text-black">
+              <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-teal" />
-                  <h3 className="font-heading font-bold text-lg text-text">ROUND REVIEW</h3>
+                  <h3 className="font-heading font-bold text-lg text-text print:text-black">INCIDENT RETROSPECTIVE REPORT</h3>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-surface border border-border text-[10px] font-mono text-muted">
-                  {scenario.review.labeled}
-                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handlePrintReport}
+                    className="px-3 py-1.5 rounded-lg bg-[#181820] border border-[#26262C] hover:text-teal text-xs font-mono flex items-center gap-1.5 transition-colors print:hidden"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print Report</span>
+                  </button>
+                  <span className="px-2 py-0.5 rounded bg-surface border border-border text-[10px] font-mono text-muted">
+                    {scenario.review.labeled}
+                  </span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-                <div className="p-3 rounded-xl bg-[#16161D] border border-coral/30">
-                  <span className="text-muted text-[11px]">Red Attack Score</span>
-                  <div className="text-2xl font-black text-coral mt-1">{scenario.review.redScore} XP</div>
-                </div>
-                <div className="p-3 rounded-xl bg-[#16161D] border border-teal/30">
-                  <span className="text-muted text-[11px]">Blue Defense Score</span>
-                  <div className="text-2xl font-black text-teal mt-1">{scenario.review.blueScore} XP</div>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 font-mono text-xs">
+                <div className="p-3 rounded-xl bg-[#16161D] border border-border">
+                  <span className="text-muted text-[10.5px]">Time to Detect (MTTD)</span>
+                  <div className="text-xl font-bold text-text mt-1">{retroReport.mttdSec ? `${retroReport.mttdSec}s` : '—'}</div>
                 </div>
                 <div className="p-3 rounded-xl bg-[#16161D] border border-border">
-                  <span className="text-muted text-[11px]">Mean Time to Detect (MTTD)</span>
-                  <div className="text-2xl font-black text-text mt-1">{scenario.review.mttd}</div>
+                  <span className="text-muted text-[10.5px]">Time to Contain</span>
+                  <div className="text-xl font-bold text-teal mt-1">{retroReport.containmentSec ? `${retroReport.containmentSec}s` : 'Neutralized'}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#16161D] border border-border">
+                  <span className="text-muted text-[10.5px]">Pipeline Latency</span>
+                  <div className="text-xl font-bold text-text mt-1">{retroReport.pipelineLatencySec}s (avg)</div>
+                </div>
+                <div className="p-3 rounded-xl bg-[#16161D] border border-border">
+                  <span className="text-muted text-[10.5px]">Missed Sub-Techniques</span>
+                  <div className="text-xl font-bold text-coral mt-1">{retroReport.missedTechniques.length}</div>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[#09090B] border border-[#26262C] text-xs font-sans text-muted">
-                <strong className="text-text font-mono mr-1">Key Tactical Takeaway:</strong>
-                {scenario.review.lesson}
+              {/* Remediation Priorities */}
+              <div className="p-4 rounded-xl bg-[#09090B] border border-[#26262C] space-y-2 text-xs font-sans">
+                <span className="font-mono text-teal font-semibold block uppercase tracking-wider text-[11px]">
+                  Step-by-Step Remediation Recommendations:
+                </span>
+                <ul className="space-y-1.5 text-muted">
+                  {retroReport.remediation.map((rem, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-teal shrink-0 mt-1.5" />
+                      <span>{rem}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              <div className="flex justify-end gap-3 pt-2 font-mono text-xs">
+              <div className="flex justify-end gap-3 pt-2 font-mono text-xs print:hidden">
                 <button
                   onClick={() => seek(0)}
                   className="px-4 py-2 rounded-lg bg-[#18181D] hover:bg-[#22222A] text-text border border-[#26262C]"
@@ -491,7 +733,6 @@ export default function TeamsPage() {
             </p>
           </div>
 
-          {/* Toggle switcher: Bringing group vs Match me */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
             <div className="inline-flex rounded-xl p-1 bg-[#09090B] border border-border font-mono text-xs">
               <button
@@ -516,7 +757,6 @@ export default function TeamsPage() {
               </button>
             </div>
 
-            {/* Rule Chips */}
             <div className="flex flex-wrap items-center gap-2">
               {TEAMS_CONTENT.matchmaking.chips.map((chip, idx) => (
                 <span
@@ -532,7 +772,7 @@ export default function TeamsPage() {
           {/* Animated Matchmaking Lanes */}
           <div className="p-6 rounded-xl bg-[#0B0C0E] border border-border space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
-              {TEAMS_CONTENT.matchmaking.steps.map((st, idx) => {
+              {TEAMS_CONTENT.matchmaking.steps.map((st) => {
                 const isCurrent = matchStep === st.step;
                 const isPassed = matchStep > st.step;
 
@@ -562,7 +802,7 @@ export default function TeamsPage() {
               })}
             </div>
 
-            {/* Visual simulation lane depending on mode */}
+            {/* Visual simulation lane */}
             <div className="p-4 rounded-xl bg-[#121217] border border-[#26262C] font-mono text-xs">
               {matchmakingMode === 'group' ? (
                 <div className="space-y-3">
@@ -618,7 +858,6 @@ export default function TeamsPage() {
               )}
             </div>
 
-            {/* Matchmaking Disclaimer */}
             <div className="text-[11px] text-muted/70 font-mono italic">
               {TEAMS_CONTENT.matchmaking.disclaimer}
             </div>
@@ -673,7 +912,6 @@ export default function TeamsPage() {
             ))}
           </div>
 
-          {/* Safety Strip */}
           <div className="p-4 rounded-xl bg-[#0D0D10] border border-[#26262C] text-center font-mono text-xs text-muted">
             <span className="text-teal font-bold mr-2">STRICT ISOLATION GUARANTEE:</span>
             {TEAMS_CONTENT.safetyStrip}
@@ -774,6 +1012,7 @@ export default function TeamsPage() {
             </Link>
           </div>
         </section>
+
       </div>
     </div>
   );

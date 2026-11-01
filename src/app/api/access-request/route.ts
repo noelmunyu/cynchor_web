@@ -21,21 +21,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email } = parseResult.data;
+    const { name, email, source = 'demo', website } = parseResult.data;
+
+    // Honeypot check: if website filled, return success silently without inserting
+    if (website && website.length > 0) {
+      return NextResponse.json({
+        success: true,
+        message: "We'll email you a login once approved.",
+      });
+    }
+
     const db = getDb();
     const id = `req_${crypto.randomUUID()}`;
     const createdAt = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO access_requests (id, name, email, status, created_at)
-      VALUES (?, ?, ?, 'PENDING', ?)
+      INSERT INTO access_requests (id, name, email, status, source, created_at)
+      VALUES (?, ?, ?, 'PENDING', ?, ?)
     `);
 
-    stmt.run(id, name, email, createdAt);
+    stmt.run(id, name, email, source, createdAt);
 
     recordAuditLog({
       action: 'ACCESS_REQUEST_SUBMITTED',
-      details: `Access request submitted for ${email}`,
+      details: `Access request submitted for ${email} (source: ${source})`,
       ip,
     });
 

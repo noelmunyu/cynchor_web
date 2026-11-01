@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lexend:wght@500;600;700&family=Outfit:wght@500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -38,9 +36,9 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text);
 }
 
-/* Gradient highlight for at most ONE highlighted word per headline */
+/* Gradient highlight for at most ONE highlighted word per headline - hard-stop / narrow transition to prevent muddy grey-green */
 .gradient-text {
-  background: linear-gradient(100deg, #17ABA9 0%, #5FD0C8 35%, #F08A6F 65%, #EA694B 100%);
+  background: linear-gradient(100deg, #17ABA9 0%, #17ABA9 48%, #EA694B 52%, #EA694B 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
@@ -48,7 +46,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .gradient-text-h {
-  background: linear-gradient(90deg, #17ABA9 0%, #EA694B 100%);
+  background: linear-gradient(90deg, #17ABA9 0%, #17ABA9 48%, #EA694B 52%, #EA694B 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;

@@ -7,6 +7,10 @@ import { DisclaimerModal } from '@/components/disclaimer/DisclaimerModal';
 import { LaptopEventMockup } from '@/components/illustrations/LaptopEventMockup';
 import { SegmentedNetworkDiagram } from '@/components/illustrations/SegmentedNetworkDiagram';
 import { ConcentricWatermark } from '@/components/illustrations/ConcentricWatermark';
+import { PageEffects } from '@/components/motion/PageEffects';
+import { Reveal } from '@/components/motion/Reveal';
+import { SplitText } from '@/components/motion/SplitText';
+import { DecodeText } from '@/components/motion/DecodeText';
 import { 
   ShieldCheck, 
   ArrowRight, 
@@ -31,27 +35,33 @@ export default function HomePage() {
 
   return (
     <div className="bg-bg text-text relative overflow-hidden">
+      <PageEffects />
+
       {/* SECTION 3.1: HERO WITH LAPTOP & GAMIFIED EVENT */}
       <section className="relative min-h-[calc(100vh-84px)] flex flex-col justify-center items-center py-8 sm:py-12 border-b border-border overflow-hidden">
+        {/* Faint futuristic dot grid */}
+        <div className="cy-grid-bg" aria-hidden="true" />
+
         {/* Background Concentric Arc Watermark (~4% opacity) - placed on far left so arcs never cut across laptop */}
         <ConcentricWatermark className="-top-32 -left-48 opacity-[0.035]" />
         <ConcentricWatermark className="-bottom-40 -left-20 opacity-[0.035]" />
 
-        <div className="container mx-auto px-4 sm:px-6 max-w-6xl w-full my-auto">
+        <div className="container mx-auto px-4 sm:px-6 max-w-6xl w-full my-auto relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-10">
             {/* Left Column (45%) */}
             <div className="w-full lg:w-[45%] space-y-6 text-left">
               {/* Eyebrow & V1 Badge with pulsing teal dot */}
               <div className="flex items-center gap-3">
                 <Badge type="v1" />
-                <span className="text-[11px] font-mono text-muted tracking-widest uppercase font-semibold">
-                  THE PRODUCT
-                </span>
+                <DecodeText
+                  text="THE PRODUCT"
+                  className="text-[11px] text-muted tracking-widest uppercase font-semibold"
+                />
               </div>
 
               {/* Headline with Clean Left-to-Right Brand Gradient on "real attack." */}
               <h1 className="font-heading font-bold text-3xl sm:text-5xl text-text tracking-tightest leading-[1.15]">
-                Train like it&apos;s a <br className="hidden sm:inline" />
+                <SplitText text="Train like it's a" as="span" /> <br className="hidden sm:inline" />
                 <span 
                   className="font-black"
                   style={{
@@ -67,16 +77,18 @@ export default function HomePage() {
               </h1>
 
               {/* Confident, short voice */}
-              <p className="text-sm sm:text-base text-muted leading-relaxed">
-                Cynchor puts red and blue teams in a live, gamified cyber range.
-                Attack, defend, and learn by doing.
-              </p>
+              <Reveal variant="fade-up" delay={120}>
+                <p className="text-sm sm:text-base text-muted leading-relaxed">
+                  Cynchor puts red and blue teams in a live, gamified cyber range.
+                  Attack, defend, and learn by doing.
+                </p>
+              </Reveal>
 
               {/* CTAs */}
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button
                   onClick={() => setIsDisclaimerOpen(true)}
-                  className="px-6 py-3 rounded-xl bg-teal text-bg font-heading font-semibold text-sm hover:shadow-glow-teal transition-all flex items-center justify-center gap-2 focus:ring-2 focus:ring-teal focus:outline-none"
+                  className="cy-btn-sheen px-6 py-3 rounded-xl bg-teal text-bg font-heading font-semibold text-sm hover:shadow-glow-teal transition-all flex items-center justify-center gap-2 focus:ring-2 focus:ring-teal focus:outline-none"
                 >
                   <ShieldCheck className="w-4 h-4" />
                   Test Our Product
@@ -92,7 +104,9 @@ export default function HomePage() {
               </div>
 
               {/* Compact Truthful Stat Row with Animated Count-Up */}
-              <StatRow />
+              <Reveal variant="fade-up" delay={180}>
+                <StatRow />
+              </Reveal>
 
               {/* Row of 3 trust-free facts in --muted with icons */}
               <div className="pt-2 flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-muted">
@@ -113,7 +127,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column (55%): LAPTOP MOCKUP & SHOWCASE */}
+            {/* Right Column (55%): LAPTOP MOCKUP & SHOWCASE - Untouched */}
             <div className="w-full lg:w-[55%] flex flex-col items-center justify-center">
               <LaptopEventMockup />
             </div>
@@ -133,27 +147,29 @@ export default function HomePage() {
       <section id="how-it-works" className="py-16 sm:py-24 border-b border-border bg-surface/40 relative">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <span className="text-[11px] font-mono text-muted tracking-widest uppercase font-semibold">
-              HOW IT WORKS
-            </span>
+            <DecodeText
+              text="HOW IT WORKS"
+              className="text-[11px] text-muted tracking-widest uppercase font-semibold block"
+            />
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tightest">
-              How it works
+              <SplitText text="How it works" as="span" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Three clear stages from onboarding to live engagement.
-            </p>
+            <Reveal variant="fade-up" delay={100}>
+              <p className="text-xs sm:text-sm text-muted">
+                Three clear stages from onboarding to live engagement.
+              </p>
+            </Reveal>
           </div>
 
           <div className="relative">
-            {/* Connected line in brand gradient (horizontal on desktop, vertical on mobile) */}
-            <div
-              className="hidden md:block absolute top-12 left-16 right-16 h-0.5 z-0"
-              style={{ background: 'linear-gradient(90deg, #17ABA9 0%, #EA694B 100%)' }}
-            />
+            {/* Connected line in brand gradient (horizontal on desktop) */}
+            <div className="hidden md:block absolute top-12 left-16 right-16 z-0">
+              <div className="cy-line" data-cy-reveal="line" />
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10" data-cy-stagger="true">
               {/* Step 1 */}
-              <div className="bg-surface p-6 rounded-2xl border border-border space-y-3 flex flex-col justify-between">
+              <Reveal variant="fade-up" className="bg-surface p-6 rounded-2xl border border-border space-y-3 flex flex-col justify-between cy-hover-card">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center mb-4">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#17ABA9" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -171,10 +187,10 @@ export default function HomePage() {
                     Select your operational role and experience level. Lock in your track.
                   </p>
                 </div>
-              </div>
+              </Reveal>
 
               {/* Step 2 */}
-              <div className="bg-surface p-6 rounded-2xl border border-border space-y-3 flex flex-col justify-between">
+              <Reveal variant="fade-up" className="bg-surface p-6 rounded-2xl border border-border space-y-3 flex flex-col justify-between cy-hover-card">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center mb-4">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E5E6E6" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -192,10 +208,10 @@ export default function HomePage() {
                     Practice solo at your own pace or queue into a 3-person combat squad.
                   </p>
                 </div>
-              </div>
+              </Reveal>
 
               {/* Step 3 */}
-              <div className="bg-surface p-6 rounded-2xl border border-border space-y-3 flex flex-col justify-between">
+              <Reveal variant="fade-up" className="bg-surface p-6 rounded-2xl border border-border space-y-3 flex flex-col justify-between cy-hover-card">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center mb-4">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EA694B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -212,7 +228,7 @@ export default function HomePage() {
                     Launch attacks, parse headers, triage alerts, and examine post-match telemetry.
                   </p>
                 </div>
-              </div>
+              </Reveal>
             </div>
           </div>
         </div>
@@ -222,15 +238,18 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <span className="text-[11px] font-mono text-muted tracking-widest uppercase font-semibold">
-              COMBAT DISCIPLINES
-            </span>
+            <DecodeText
+              text="COMBAT DISCIPLINES"
+              className="text-[11px] text-muted tracking-widest uppercase font-semibold block"
+            />
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tightest">
-              Two disciplines. Shared battlefield.
+              <SplitText text="Two disciplines. Shared battlefield." as="span" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Choose your side or master both across synchronized exercises.
-            </p>
+            <Reveal variant="fade-up" delay={100}>
+              <p className="text-xs sm:text-sm text-muted">
+                Choose your side or master both across synchronized exercises.
+              </p>
+            </Reveal>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 rounded-2xl border border-border overflow-hidden relative shadow-lg">
@@ -241,7 +260,10 @@ export default function HomePage() {
             />
 
             {/* Left Panel: Red Team (Coral-tinted) */}
-            <div className="p-8 sm:p-10 bg-[#140e0c]/80 border-b md:border-b-0 md:border-r border-border/60 space-y-6">
+            <div
+              data-cy-reveal="slide-left"
+              className="p-8 sm:p-10 bg-[#140e0c]/80 border-b md:border-b-0 md:border-r border-border/60 space-y-6 cy-hover-card"
+            >
               <div className="flex items-center justify-between">
                 <Badge type="red" />
                 <span className="text-[11px] font-mono text-coral/80">OFFENSIVE</span>
@@ -274,7 +296,10 @@ export default function HomePage() {
             </div>
 
             {/* Right Panel: Blue Team (Teal-tinted) */}
-            <div className="p-8 sm:p-10 bg-[#0b1414]/80 space-y-6">
+            <div
+              data-cy-reveal="slide-right"
+              className="p-8 sm:p-10 bg-[#0b1414]/80 space-y-6 cy-hover-card"
+            >
               <div className="flex items-center justify-between">
                 <Badge type="blue" />
                 <span className="text-[11px] font-mono text-teal/80">DEFENSIVE</span>
@@ -313,20 +338,23 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 border-b border-border bg-surface/30">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <span className="text-[11px] font-mono text-muted tracking-widest uppercase font-semibold">
-              OPERATIONAL MODES
-            </span>
+            <DecodeText
+              text="OPERATIONAL MODES"
+              className="text-[11px] text-muted tracking-widest uppercase font-semibold block"
+            />
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tightest">
-              Learn alone or enter a team
+              <SplitText text="Learn alone or enter a team" as="span" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Select your mode of operation. Both paths land in isolated range pods.
-            </p>
+            <Reveal variant="fade-up" delay={100}>
+              <p className="text-xs sm:text-sm text-muted">
+                Select your mode of operation. Both paths land in isolated range pods.
+              </p>
+            </Reveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8" data-cy-stagger="true">
             {/* Card 1: Learn Alone */}
-            <div className="bg-surface p-8 rounded-2xl border border-border hover:border-teal/50 hover:shadow-glow-teal transition-all flex flex-col justify-between">
+            <Reveal variant="fade-up" className="bg-surface p-8 rounded-2xl border border-border hover:border-teal/50 hover:shadow-glow-teal transition-all flex flex-col justify-between cy-hover-card cy-hud">
               <div className="space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-teal/10 text-teal flex items-center justify-center">
                   <Terminal className="w-5 h-5" />
@@ -349,15 +377,15 @@ export default function HomePage() {
               <div className="pt-6">
                 <button
                   onClick={() => setIsDisclaimerOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl border border-border text-text font-heading font-semibold text-xs hover:border-teal hover:text-teal transition-colors flex items-center justify-center gap-2"
+                  className="cy-btn-sheen w-full py-2.5 px-4 rounded-xl border border-border text-text font-heading font-semibold text-xs hover:border-teal hover:text-teal transition-colors flex items-center justify-center gap-2"
                 >
                   Enter Solo Range <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </div>
+            </Reveal>
 
             {/* Card 2: Enter a team */}
-            <div className="bg-surface p-8 rounded-2xl border border-border hover:border-coral/50 hover:shadow-glow-coral transition-all flex flex-col justify-between">
+            <Reveal variant="fade-up" className="bg-surface p-8 rounded-2xl border border-border hover:border-coral/50 hover:shadow-glow-coral transition-all flex flex-col justify-between cy-hover-card cy-hud">
               <div className="space-y-4">
                 <div className="w-10 h-10 rounded-xl bg-coral/10 text-coral flex items-center justify-center">
                   <Users2 className="w-5 h-5" />
@@ -380,12 +408,12 @@ export default function HomePage() {
               <div className="pt-6">
                 <button
                   onClick={() => setIsDisclaimerOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-teal text-bg font-heading font-semibold text-xs hover:shadow-glow-teal transition-all flex items-center justify-center gap-2"
+                  className="cy-btn-sheen w-full py-2.5 px-4 rounded-xl bg-teal text-bg font-heading font-semibold text-xs hover:shadow-glow-teal transition-all flex items-center justify-center gap-2"
                 >
                   Enter Squad Lobby <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -394,47 +422,50 @@ export default function HomePage() {
       <section className="py-16 sm:py-24 border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl space-y-12">
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <span className="text-[11px] font-mono text-muted tracking-widest uppercase font-semibold">
-              SECURITY POSTURE
-            </span>
+            <DecodeText
+              text="SECURITY POSTURE"
+              className="text-[11px] text-muted tracking-widest uppercase font-semibold block"
+            />
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tightest">
-              Built secure by design
+              <SplitText text="Built secure by design" as="span" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Strict isolation ensures range activities never touch production systems.
-            </p>
+            <Reveal variant="fade-up" delay={100}>
+              <p className="text-xs sm:text-sm text-muted">
+                Strict isolation ensures range activities never touch production systems.
+              </p>
+            </Reveal>
           </div>
 
-          {/* Segmented Network Diagram (Section 4b) */}
-          <div className="p-6 sm:p-8 rounded-2xl bg-surface border border-border shadow-md">
+          {/* Segmented Network Diagram */}
+          <Reveal variant="scale" className="p-6 sm:p-8 rounded-2xl bg-surface border border-border shadow-md cy-hud">
             <SegmentedNetworkDiagram />
-          </div>
+          </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-muted">
-            <div className="p-5 rounded-xl bg-surface border border-border space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-muted" data-cy-stagger="true">
+            <Reveal variant="fade-up" className="p-5 rounded-xl bg-surface border border-border space-y-2 cy-hover-card">
               <strong className="text-text block font-heading font-semibold text-sm">
                 Network Segmentation
               </strong>
               <p className="leading-relaxed">
                 Dedicated VLANs and Proxmox SDN firewall policies prevent lateral leakage across tenants.
               </p>
-            </div>
-            <div className="p-5 rounded-xl bg-surface border border-border space-y-2">
+            </Reveal>
+            <Reveal variant="fade-up" className="p-5 rounded-xl bg-surface border border-border space-y-2 cy-hover-card">
               <strong className="text-text block font-heading font-semibold text-sm">
                 Least Privilege Access
               </strong>
               <p className="leading-relaxed">
                 Operator-provisioned authentication with role constraints and zero self-registration.
               </p>
-            </div>
-            <div className="p-5 rounded-xl bg-surface border border-border space-y-2">
+            </Reveal>
+            <Reveal variant="fade-up" className="p-5 rounded-xl bg-surface border border-border space-y-2 cy-hover-card">
               <strong className="text-text block font-heading font-semibold text-sm">
                 Monitored Environments
               </strong>
               <p className="leading-relaxed">
                 Continuous telemetry captures scoring metrics while keeping corporate data 100% synthetic.
               </p>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -443,13 +474,13 @@ export default function HomePage() {
       <section className="py-20 bg-surface/70 text-center relative">
         <ConcentricWatermark className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
 
-        <div className="container mx-auto px-4 sm:px-6 max-w-3xl space-y-6 relative z-10">
+        <Reveal variant="scale" className="container mx-auto px-4 sm:px-6 max-w-3xl space-y-6 relative z-10 cy-glass p-8 sm:p-12 rounded-3xl">
           <div>
             <Badge type="v1" />
           </div>
 
           <h2 className="font-heading font-bold text-3xl sm:text-4xl text-text tracking-tightest">
-            Ready to test your readiness?
+            <SplitText text="Ready to test your readiness?" as="span" />
           </h2>
 
           <p className="text-xs sm:text-sm text-muted max-w-lg mx-auto">
@@ -459,13 +490,13 @@ export default function HomePage() {
           <div className="pt-2">
             <button
               onClick={() => setIsDisclaimerOpen(true)}
-              className="px-8 py-3.5 rounded-xl bg-teal text-bg font-heading font-semibold text-sm hover:shadow-glow-teal transition-all inline-flex items-center gap-2 focus:ring-2 focus:ring-teal focus:outline-none"
+              className="cy-btn-sheen px-8 py-3.5 rounded-xl bg-teal text-bg font-heading font-semibold text-sm hover:shadow-glow-teal transition-all inline-flex items-center gap-2 focus:ring-2 focus:ring-teal focus:outline-none"
             >
               <ShieldCheck className="w-4 h-4" />
               Test Our Product
             </button>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Mandatory Disclaimer Modal */}

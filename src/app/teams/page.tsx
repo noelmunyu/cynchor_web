@@ -16,6 +16,10 @@ import { TerminalPane } from '@/components/visuals/TerminalPane';
 import { PlayModeSwitch } from '@/components/visuals/PlayModeSwitch';
 import { TEAMS_CONTENT } from '@/content/teams';
 import { SYNTHETIC_INJECTS, PlayMode } from '@/content/modes';
+import { PageEffects } from '@/components/motion/PageEffects';
+import { Reveal } from '@/components/motion/Reveal';
+import { SplitText } from '@/components/motion/SplitText';
+import { DecodeText } from '@/components/motion/DecodeText';
 import {
   Play,
   Pause,
@@ -210,7 +214,9 @@ export default function TeamsPage() {
   };
 
   return (
-    <div className="bg-[#09090B] text-text min-h-screen py-10 sm:py-16 selection:bg-teal/30 selection:text-white">
+    <div className="relative bg-[#09090B] text-text min-h-screen py-10 sm:py-16 selection:bg-teal/30 selection:text-white overflow-hidden">
+      <PageEffects />
+      <div className="cy-grid-bg" aria-hidden="true" />
       {/* Background Arc Watermark */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none opacity-10 overflow-hidden" role="img" aria-label="Decorative watermark">
         <svg viewBox="0 0 800 400" className="w-full h-full">
@@ -226,21 +232,25 @@ export default function TeamsPage() {
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="flex justify-center items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold uppercase tracking-wider bg-surface border border-border text-muted">
-              {TEAMS_CONTENT.hero.badge}
+              <DecodeText text={TEAMS_CONTENT.hero.badge} />
             </span>
           </div>
 
           <h1 className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-text tracking-tightest">
-            Two sides. <span className="gradient-text font-black">One live range.</span>
+            <SplitText text="Two sides." /> <span className="gradient-text font-black">One live range.</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed font-sans">
-            {TEAMS_CONTENT.hero.subtitle}
-          </p>
+          <Reveal variant="fade-up" delay={120}>
+            <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed font-sans">
+              {TEAMS_CONTENT.hero.subtitle}
+            </p>
+          </Reveal>
 
-          <div className="pt-2 flex items-center justify-center">
-            <div className="h-1 w-64 rounded-full bg-gradient-to-r from-coral via-transparent to-teal" />
-          </div>
+          <Reveal variant="scale" delay={200}>
+            <div className="pt-2 flex items-center justify-center">
+              <div className="h-1 w-64 rounded-full bg-gradient-to-r from-coral via-transparent to-teal cy-line" />
+            </div>
+          </Reveal>
         </div>
 
         {/* PLAY-MODE SWITCH */}
@@ -376,7 +386,7 @@ export default function TeamsPage() {
           )}
 
           {/* Arena Control Bar */}
-          <div className="bg-[#111114] border border-[#26262C] rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="cy-hud cy-scan bg-[#111114] border border-[#26262C] rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2 font-mono text-xs">
               <span className="text-muted hidden sm:inline">Scenario:</span>
               <button
@@ -725,12 +735,14 @@ export default function TeamsPage() {
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-teal" />
               <h2 className="font-heading font-bold text-2xl text-text tracking-tight">
-                {TEAMS_CONTENT.matchmaking.title}
+                <SplitText text={TEAMS_CONTENT.matchmaking.title} />
               </h2>
             </div>
-            <p className="text-xs sm:text-sm text-muted max-w-2xl">
-              {TEAMS_CONTENT.matchmaking.subtitle}
-            </p>
+            <Reveal variant="fade-up" delay={80}>
+              <p className="text-xs sm:text-sm text-muted max-w-2xl">
+                {TEAMS_CONTENT.matchmaking.subtitle}
+              </p>
+            </Reveal>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
@@ -771,7 +783,7 @@ export default function TeamsPage() {
 
           {/* Animated Matchmaking Lanes */}
           <div className="p-6 rounded-xl bg-[#0B0C0E] border border-border space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 relative">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 relative" data-cy-stagger="true">
               {TEAMS_CONTENT.matchmaking.steps.map((st) => {
                 const isCurrent = matchStep === st.step;
                 const isPassed = matchStep > st.step;
@@ -779,8 +791,9 @@ export default function TeamsPage() {
                 return (
                   <div
                     key={st.step}
+                    data-cy-reveal="fade-up"
                     onClick={() => setMatchStep(st.step)}
-                    className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
+                    className={`cy-hover-card p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
                       isCurrent
                         ? 'bg-[#181820] border-teal shadow-[0_0_12px_rgba(23,171,169,0.25)]'
                         : isPassed
@@ -868,18 +881,21 @@ export default function TeamsPage() {
         <section className="space-y-6">
           <div className="text-center space-y-2">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tight">
-              What You Learn
+              <SplitText text="What You Learn" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Every offensive technique paired directly with its defensive mirror.
-            </p>
+            <Reveal variant="fade-up" delay={80}>
+              <p className="text-xs sm:text-sm text-muted">
+                Every offensive technique paired directly with its defensive mirror.
+              </p>
+            </Reveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-cy-stagger="true">
             {TEAMS_CONTENT.benefits.map((card) => (
-              <div
+              <Reveal
                 key={card.id}
-                className="bg-surface p-6 rounded-2xl border border-border hover:border-teal/50 transition-all space-y-4"
+                variant="fade-up"
+                className="cy-hover-card bg-surface p-6 rounded-2xl border border-border hover:border-teal/50 transition-all space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <h3 className="font-heading font-bold text-lg text-text">
@@ -908,32 +924,35 @@ export default function TeamsPage() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0D0D10] border border-[#26262C] text-center font-mono text-xs text-muted">
+          <Reveal variant="fade-up" className="p-4 rounded-xl bg-[#0D0D10] border border-[#26262C] text-center font-mono text-xs text-muted">
             <span className="text-teal font-bold mr-2">STRICT ISOLATION GUARANTEE:</span>
             {TEAMS_CONTENT.safetyStrip}
-          </div>
+          </Reveal>
         </section>
 
         {/* 2.4 ROLE LANES */}
         <section className="space-y-6">
           <div className="text-center space-y-2">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tight">
-              Specialized Role Lanes
+              <SplitText text="Specialized Role Lanes" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Deepen operational craft across offensive, defensive, infrastructure, and governance disciplines.
-            </p>
+            <Reveal variant="fade-up" delay={80}>
+              <p className="text-xs sm:text-sm text-muted">
+                Deepen operational craft across offensive, defensive, infrastructure, and governance disciplines.
+              </p>
+            </Reveal>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-cy-stagger="true">
             {TEAMS_CONTENT.roleLanes.map((role) => (
-              <div
+              <Reveal
                 key={role.id}
-                className={`p-5 rounded-2xl border flex flex-col justify-between space-y-4 transition-all ${
+                variant={role.badgeType === 'coral' ? 'slide-left' : role.badgeType === 'teal' ? 'slide-right' : 'fade-up'}
+                className={`cy-hover-card p-5 rounded-2xl border flex flex-col justify-between space-y-4 transition-all ${
                   role.badgeType === 'coral'
                     ? 'bg-surface border-coral/30 hover:border-coral'
                     : role.badgeType === 'teal'
@@ -982,13 +1001,13 @@ export default function TeamsPage() {
                     ))}
                   </ul>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
 
         {/* 2.5 CTA BAND */}
-        <section className="bg-gradient-to-r from-[#111116] via-[#16161D] to-[#111116] border border-border rounded-2xl p-8 sm:p-10 text-center space-y-6">
+        <Reveal variant="scale" className="bg-gradient-to-r from-[#111116] via-[#16161D] to-[#111116] border border-border rounded-2xl p-8 sm:p-10 text-center space-y-6">
           <div className="inline-flex items-center gap-2">
             <Badge type="v1" size="md" />
           </div>
@@ -1005,13 +1024,13 @@ export default function TeamsPage() {
           <div>
             <Link
               href={TEAMS_CONTENT.cta.href}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal text-black font-heading font-bold text-sm hover:bg-teal/90 transition-all shadow-lg hover:shadow-teal/20"
+              className="cy-btn-sheen inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal text-black font-heading font-bold text-sm hover:bg-teal/90 transition-all shadow-lg hover:shadow-teal/20"
             >
               <span>{TEAMS_CONTENT.cta.buttonLabel}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-        </section>
+        </Reveal>
 
       </div>
     </div>

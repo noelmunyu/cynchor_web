@@ -32,3 +32,4 @@ export function ScrollProgress() {
 
   return <div className="cy-scroll-progress" aria-hidden="true" />;
 }
+

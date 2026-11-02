@@ -35,3 +35,4 @@ test('Motion: splitWords is deterministic and handles empty or short inputs', ()
   const text = 'Deterministic check across multiple calls 123.';
   assert.deepEqual(splitWords(text), splitWords(text));
 });
+

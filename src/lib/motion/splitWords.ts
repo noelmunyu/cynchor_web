@@ -18,3 +18,4 @@ export function splitWords(text: string, maxWords = 12): string[] {
   result.push(remainder);
   return result;
 }
+

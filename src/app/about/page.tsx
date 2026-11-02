@@ -1,11 +1,16 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import { Metadata } from 'next';
 import { Logo } from '@/components/brand/Logo';
 import { Badge } from '@/components/common/Badge';
 import { ConcentricWatermark } from '@/components/illustrations/ConcentricWatermark';
+import { TeamSection } from '@/components/about/TeamSection';
 import { Target, Shield, Compass, ArrowRight } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'About | Cynchor',
+  description: 'The story behind Cynchor and the people building adversarial cyber range realism.',
+};
 
 export default function AboutPage() {
   return (
@@ -97,6 +102,9 @@ export default function AboutPage() {
             embodying the dynamic balance between Blue Team defenders and Red Team adversaries.
           </p>
         </div>
+
+        {/* Team Section (Co-founders) */}
+        <TeamSection />
 
         {/* CTA */}
         <div className="text-center pt-2">

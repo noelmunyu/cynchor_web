@@ -9,6 +9,10 @@ import { PlayModeSwitch } from '@/components/visuals/PlayModeSwitch';
 import { INDIVIDUALS_CONTENT, TriageCase } from '@/content/individuals';
 import { hintCost, totalHintPenalty } from '@/lib/rangeSim/scoring';
 import { PlayMode } from '@/content/modes';
+import { PageEffects } from '@/components/motion/PageEffects';
+import { Reveal } from '@/components/motion/Reveal';
+import { SplitText } from '@/components/motion/SplitText';
+import { DecodeText } from '@/components/motion/DecodeText';
 import {
   Clock,
   User,
@@ -183,14 +187,16 @@ export default function IndividualsPage() {
     : { title: 'Multi-Stage Host Containment & Token Revocation (Tier 2)', rule: 'Intermediate progression track matching your current radar balance.' };
 
   return (
-    <div className="bg-[#09090B] text-text min-h-screen py-10 sm:py-16 selection:bg-teal/30 selection:text-white">
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-16">
+    <div className="relative bg-[#09090B] text-text min-h-screen py-10 sm:py-16 selection:bg-teal/30 selection:text-white overflow-hidden">
+      <PageEffects />
+      <div className="cy-grid-bg" aria-hidden="true" />
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-16 relative z-10">
         
         {/* Hero Section */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="flex justify-center items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold uppercase tracking-wider bg-surface border border-border text-muted">
-              {INDIVIDUALS_CONTENT.hero.badge}
+              <DecodeText text={INDIVIDUALS_CONTENT.hero.badge} />
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-teal/10 text-teal border border-teal/20">
               {INDIVIDUALS_CONTENT.hero.conceptLabel}
@@ -198,12 +204,14 @@ export default function IndividualsPage() {
           </div>
 
           <h1 className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-text tracking-tightest">
-            Your shift <span className="gradient-text font-black">starts now.</span>
+            <SplitText text="Your shift" /> <span className="gradient-text font-black">starts now.</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed">
-            {INDIVIDUALS_CONTENT.hero.subtitle}
-          </p>
+          <Reveal variant="fade-up" delay={120}>
+            <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed">
+              {INDIVIDUALS_CONTENT.hero.subtitle}
+            </p>
+          </Reveal>
         </div>
 
         {/* PLAY-MODE SWITCH */}
@@ -269,7 +277,7 @@ export default function IndividualsPage() {
         )}
 
         {/* 3.1 & 3.2 ANALYST WORKSTATION & MINI-GAME */}
-        <section className={`bg-[#0D0E12] rounded-2xl border border-border overflow-hidden shadow-2xl space-y-0 ${
+        <section className={`cy-hud bg-[#0D0E12] rounded-2xl border border-border overflow-hidden shadow-2xl space-y-0 ${
           sessionState !== 'Running' ? 'opacity-65 pointer-events-none' : ''
         }`}>
           {/* Workstation Top Bar */}
@@ -760,18 +768,21 @@ export default function IndividualsPage() {
         <section className="space-y-6">
           <div className="text-center space-y-2">
             <h2 className="font-heading font-bold text-2xl sm:text-3xl text-text tracking-tight">
-              Solo Progression Track
+              <SplitText text="Solo Progression Track" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              Unlock complex multi-stage attack scenarios as your operational craft expands.
-            </p>
+            <Reveal variant="fade-up" delay={80}>
+              <p className="text-xs sm:text-sm text-muted">
+                Unlock complex multi-stage attack scenarios as your operational craft expands.
+              </p>
+            </Reveal>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" data-cy-stagger="true">
             {INDIVIDUALS_CONTENT.careerLadder.map((tier) => (
-              <div
+              <Reveal
                 key={tier.level}
-                className="bg-surface p-6 rounded-2xl border border-border hover:border-teal/40 transition-all space-y-4"
+                variant="fade-up"
+                className="cy-hover-card bg-surface p-6 rounded-2xl border border-border hover:border-teal/40 transition-all space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-teal/10 text-teal border border-teal/20 font-bold uppercase">
@@ -791,7 +802,7 @@ export default function IndividualsPage() {
                   <strong className="text-text block font-mono text-[11px] mb-1">Capabilities Unlocked:</strong>
                   {tier.unlocks}
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
 
@@ -804,18 +815,21 @@ export default function IndividualsPage() {
         <section className="bg-surface rounded-2xl border border-border p-6 sm:p-8 space-y-6">
           <div className="space-y-2 text-center max-w-2xl mx-auto">
             <h2 className="font-heading font-bold text-2xl text-text tracking-tight">
-              A Day on the Range
+              <SplitText text="A Day on the Range" />
             </h2>
-            <p className="text-xs sm:text-sm text-muted">
-              What an individual training session looks like from dispatch to debrief.
-            </p>
+            <Reveal variant="fade-up" delay={80}>
+              <p className="text-xs sm:text-sm text-muted">
+                What an individual training session looks like from dispatch to debrief.
+              </p>
+            </Reveal>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-4" data-cy-stagger="true">
             {INDIVIDUALS_CONTENT.dayOnTheRange.map((st) => (
-              <div
+              <Reveal
                 key={st.step}
-                className="p-4 rounded-xl bg-[#0F0F14] border border-[#26262C] space-y-2 text-left"
+                variant="fade-up"
+                className="cy-hover-card p-4 rounded-xl bg-[#0F0F14] border border-[#26262C] space-y-2 text-left"
               >
                 <div className="flex items-center justify-between font-mono text-[10px] text-muted">
                   <span>STEP 0{st.step}</span>
@@ -827,13 +841,13 @@ export default function IndividualsPage() {
                 <p className="text-xs text-muted leading-relaxed font-sans">
                   {st.description}
                 </p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
 
         {/* 3.5 CTA BAND */}
-        <section className="bg-gradient-to-r from-[#111116] via-[#16161D] to-[#111116] border border-border rounded-2xl p-8 sm:p-10 text-center space-y-6">
+        <Reveal variant="scale" className="bg-gradient-to-r from-[#111116] via-[#16161D] to-[#111116] border border-border rounded-2xl p-8 sm:p-10 text-center space-y-6">
           <div className="inline-flex items-center gap-2">
             <Badge type="v1" size="md" />
           </div>
@@ -850,13 +864,13 @@ export default function IndividualsPage() {
           <div>
             <Link
               href={INDIVIDUALS_CONTENT.cta.href}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal text-black font-heading font-bold text-sm hover:bg-teal/90 transition-all shadow-lg hover:shadow-teal/20"
+              className="cy-btn-sheen inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal text-black font-heading font-bold text-sm hover:bg-teal/90 transition-all shadow-lg hover:shadow-teal/20"
             >
               <span>{INDIVIDUALS_CONTENT.cta.buttonLabel}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-        </section>
+        </Reveal>
 
       </div>
     </div>

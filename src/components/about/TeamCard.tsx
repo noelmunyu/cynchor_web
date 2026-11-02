@@ -21,7 +21,10 @@ export function TeamCard({ member, photoSrc }: TeamCardProps) {
   const initials = getInitials(member.name);
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5 hover:border-teal/50 hover:shadow-[0_0_24px_rgba(23,171,169,0.1)] transition-all duration-200 flex flex-col justify-between group">
+    <div
+      data-cy-reveal="blur-in"
+      className="cy-hover-card bg-surface border border-border rounded-2xl p-5 hover:border-teal/50 hover:shadow-[0_0_24px_rgba(23,171,169,0.1)] transition-all duration-200 flex flex-col justify-between group"
+    >
       <div>
         {/* Photo or Fallback Avatar in Uniform 4:5 Frame with Hairline Gradient Ring */}
         <div className="p-[1px] rounded-2xl bg-gradient-to-b from-teal/40 via-border to-coral/40 group-hover:from-teal group-hover:to-coral transition-colors duration-200">

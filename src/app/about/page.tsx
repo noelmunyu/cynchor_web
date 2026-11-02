@@ -5,6 +5,9 @@ import { Logo } from '@/components/brand/Logo';
 import { Badge } from '@/components/common/Badge';
 import { ConcentricWatermark } from '@/components/illustrations/ConcentricWatermark';
 import { TeamSection } from '@/components/about/TeamSection';
+import { PageEffects } from '@/components/motion/PageEffects';
+import { Reveal } from '@/components/motion/Reveal';
+import { SplitText } from '@/components/motion/SplitText';
 import { Target, Shield, Compass, ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -15,6 +18,8 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="bg-bg text-text py-12 sm:py-16 relative overflow-hidden">
+      <PageEffects />
+      <div className="cy-grid-bg" aria-hidden="true" />
       <ConcentricWatermark className="top-12 -right-48" />
 
       <div className="container mx-auto px-4 sm:px-6 max-w-4xl space-y-12 relative z-10">
@@ -29,15 +34,17 @@ export default function AboutPage() {
           </div>
 
           <h1 className="font-heading font-bold text-3xl sm:text-4xl text-text tracking-tightest">
-            The story behind <span className="gradient-text font-black">Cynchor.</span>
+            <SplitText text="The story behind" /> <span className="gradient-text font-black">Cynchor.</span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted max-w-xl mx-auto leading-relaxed">
-            Bridging theoretical cybersecurity education with adversarial realism.
-          </p>
+          <Reveal variant="fade-up" delay={100}>
+            <p className="text-xs sm:text-sm text-muted max-w-xl mx-auto leading-relaxed">
+              Bridging theoretical cybersecurity education with adversarial realism.
+            </p>
+          </Reveal>
         </div>
 
         {/* Story Section */}
-        <div className="bg-surface p-8 sm:p-10 rounded-3xl border border-border space-y-6 text-xs sm:text-sm leading-relaxed">
+        <Reveal variant="fade-up" className="bg-surface p-8 sm:p-10 rounded-3xl border border-border space-y-6 text-xs sm:text-sm leading-relaxed cy-hover-card">
           <div className="space-y-3">
             <h2 className="font-heading font-bold text-lg text-text">
               Anchoring cyber defense in practical reality
@@ -84,10 +91,10 @@ export default function AboutPage() {
               </p>
             </div>
           </div>
-        </div>
+        </Reveal>
 
         {/* Brand Language Note */}
-        <div className="p-6 rounded-2xl border border-border bg-surface space-y-2">
+        <Reveal variant="fade-up" className="p-6 rounded-2xl border border-border bg-surface space-y-2 cy-hover-card">
           <div className="flex items-center justify-between">
             <h3 className="font-heading font-bold text-xs text-text uppercase tracking-widestlabel">
               Brand Visual System
@@ -101,20 +108,24 @@ export default function AboutPage() {
             brand teal (<code className="text-teal font-mono">#17ABA9</code>) down to brand coral (<code className="text-coral font-mono">#EA694B</code>),
             embodying the dynamic balance between Blue Team defenders and Red Team adversaries.
           </p>
-        </div>
+        </Reveal>
 
         {/* Team Section (Co-founders) */}
         <TeamSection />
 
         {/* CTA */}
-        <div className="text-center pt-2">
+        <Reveal variant="scale" className="text-center pt-2">
           <Link
             href="/demo/login"
-            className="py-2.5 px-5 rounded-xl bg-teal text-bg font-heading font-semibold text-xs hover:shadow-glow-teal transition-all inline-flex items-center gap-1.5"
+            className="cy-btn-sheen py-2.5 px-5 rounded-xl bg-teal text-bg font-heading font-semibold text-xs hover:shadow-glow-teal transition-all inline-flex items-center gap-1.5"
           >
             Access Live Demo <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-        </div>
+        </Reveal>
+      </div>
+    </div>
+  );
+}
       </div>
     </div>
   );

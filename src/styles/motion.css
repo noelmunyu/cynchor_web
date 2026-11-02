@@ -1,0 +1,360 @@
+/**
+ * Cynchor Futuristic UI Motion & Reveal Styles
+ * Progressive Enhancement: elements default to visible.
+ * Only elements flagged with data-cy-state="ready" are hidden before reveal.
+ */
+
+/* ════════════════════════════════════════════════════════════
+   1. SCROLL REVEAL VARIANTS & TRANSITIONS
+   ════════════════════════════════════════════════════════════ */
+
+[data-cy-reveal] {
+  transition-property: transform, opacity, filter;
+  transition-duration: 650ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--cy-d, 0ms);
+}
+
+/* Pre-reveal states (ONLY applied after client JS hydration flags them as below fold) */
+[data-cy-state="ready"][data-cy-reveal="fade-up"]:not([data-cy-in="true"]) {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+[data-cy-state="ready"][data-cy-reveal="fade"]:not([data-cy-in="true"]) {
+  opacity: 0;
+}
+
+[data-cy-state="ready"][data-cy-reveal="blur-in"]:not([data-cy-in="true"]) {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+[data-cy-state="ready"][data-cy-reveal="slide-left"]:not([data-cy-in="true"]) {
+  opacity: 0;
+  transform: translateX(-32px);
+}
+
+[data-cy-state="ready"][data-cy-reveal="slide-right"]:not([data-cy-in="true"]) {
+  opacity: 0;
+  transform: translateX(32px);
+}
+
+[data-cy-state="ready"][data-cy-reveal="scale"]:not([data-cy-in="true"]) {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+[data-cy-state="ready"][data-cy-reveal="line"]:not([data-cy-in="true"]) {
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* In-viewport revealed state */
+[data-cy-in="true"][data-cy-reveal] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+[data-cy-in="true"][data-cy-reveal="line"] {
+  transform: scaleX(1);
+}
+
+/* ════════════════════════════════════════════════════════════
+   2. SPLIT TEXT WORD-BY-WORD REVEAL
+   ════════════════════════════════════════════════════════════ */
+
+.cy-split-word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  margin-right: 0.28em;
+}
+
+.cy-split-word {
+  display: inline-block;
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--cy-word-delay, 0ms);
+}
+
+[data-cy-state="ready"] .cy-split-word:not([data-cy-in="true"]) {
+  transform: translateY(115%);
+  opacity: 0;
+}
+
+[data-cy-in="true"] .cy-split-word,
+.cy-split-word[data-cy-in="true"] {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════════
+   3. SCROLL PROGRESS BAR
+   ════════════════════════════════════════════════════════════ */
+
+.cy-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, #17ABA9 0%, #17ABA9 48%, #EA694B 52%, #EA694B 100%);
+  transform-origin: left;
+  transform: scaleX(var(--cy-progress, 0));
+  z-index: 45;
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════════════
+   4. FUTURISTIC VISUAL LAYER CLASSES
+   ════════════════════════════════════════════════════════════ */
+
+/* Faint dot/grid background with soft radial vignette */
+.cy-grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(23, 171, 169, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, #000000 50%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 45%, #000000 50%, transparent 100%);
+}
+
+/* HUD corner targeting brackets (4 corners, 1px teal/60) */
+.cy-hud {
+  position: relative;
+}
+
+.cy-hud::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(23, 171, 169, 0.65) 12px, transparent 12px) top left,
+    linear-gradient(to bottom, rgba(23, 171, 169, 0.65) 12px, transparent 12px) top left,
+    linear-gradient(to left, rgba(23, 171, 169, 0.65) 12px, transparent 12px) top right,
+    linear-gradient(to bottom, rgba(23, 171, 169, 0.65) 12px, transparent 12px) top right,
+    linear-gradient(to right, rgba(23, 171, 169, 0.65) 12px, transparent 12px) bottom left,
+    linear-gradient(to top, rgba(23, 171, 169, 0.65) 12px, transparent 12px) bottom left,
+    linear-gradient(to left, rgba(23, 171, 169, 0.65) 12px, transparent 12px) bottom right,
+    linear-gradient(to top, rgba(23, 171, 169, 0.65) 12px, transparent 12px) bottom right;
+  background-size: 1.5px 12px, 12px 1.5px, 1.5px 12px, 12px 1.5px, 1.5px 12px, 12px 1.5px, 1.5px 12px, 12px 1.5px;
+  background-repeat: no-repeat;
+  z-index: 2;
+  transition: filter 200ms ease, opacity 200ms ease;
+  border-radius: inherit;
+}
+
+.cy-hud:hover::before {
+  filter: drop-shadow(0 0 5px rgba(23, 171, 169, 0.8)) brightness(1.3);
+}
+
+/* Glass panel */
+.cy-glass {
+  background-color: #111114;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+  .cy-glass {
+    background-color: rgba(17, 17, 20, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Rotating brand-gradient hairline border on featured cards */
+.cy-edge {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.cy-edge::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(from 0deg, #17ABA9 0%, #17ABA9 48%, #EA694B 52%, #EA694B 100%, #17ABA9 100%);
+  animation: cy-conic-spin 12s linear infinite;
+  z-index: 0;
+}
+
+.cy-edge > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes cy-conic-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Faint scanline texture for simulation consoles */
+.cy-scan {
+  position: relative;
+}
+
+.cy-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, 0.3) 2px,
+    rgba(0, 0, 0, 0.3) 4px
+  );
+  opacity: 0.35;
+  z-index: 5;
+}
+
+/* Brand heading underline that draws in */
+.cy-line {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(to right, #17ABA9 0%, #17ABA9 48%, #EA694B 52%, #EA694B 100%);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-cy-in="true"] .cy-line,
+.cy-line[data-cy-in="true"] {
+  transform: scaleX(1);
+}
+
+/* Section divider with glowing central node */
+.cy-divider {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #26262C 20%, #26262C 80%, transparent);
+  margin: 2.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cy-divider::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #17ABA9;
+  box-shadow: 0 0 8px #17ABA9;
+  transform: scale(0);
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-cy-in="true"] .cy-divider::after,
+.cy-divider[data-cy-in="true"]::after {
+  transform: scale(1);
+}
+
+/* Desktop-only cursor glow */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .cy-glow-host {
+    position: relative;
+  }
+  .cy-glow-host::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      240px circle at var(--cy-x, -500px) var(--cy-y, -500px),
+      rgba(23, 171, 169, 0.08),
+      transparent 80%
+    );
+    border-radius: inherit;
+    z-index: 1;
+  }
+}
+
+/* Hover polish */
+.cy-hover-card {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.cy-hover-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(23, 171, 169, 0.12);
+}
+
+.cy-btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.cy-btn-sheen::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    transparent
+  );
+  transform: rotate(25deg);
+  transition: transform 600ms ease;
+  pointer-events: none;
+}
+
+.cy-btn-sheen:hover::after {
+  transform: translateX(380%) rotate(25deg);
+}
+
+/* ════════════════════════════════════════════════════════════
+   5. REDUCED MOTION & PRINT OVERRIDES
+   ════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-cy-reveal],
+  .cy-split-word,
+  .cy-line,
+  .cy-divider::after,
+  .cy-edge::before,
+  .cy-hover-card,
+  .cy-btn-sheen::after {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+  .cy-glow-host::before {
+    display: none !important;
+  }
+}
+
+@media print {
+  [data-cy-reveal],
+  .cy-split-word,
+  .cy-line,
+  .cy-divider,
+  .cy-scroll-progress {
+    display: block !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    filter: none !important;
+  }
+  .cy-scroll-progress,
+  .cy-grid-bg,
+  .cy-glow-host::before {
+    display: none !important;
+  }
+}

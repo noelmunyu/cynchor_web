@@ -5,6 +5,9 @@ import { Badge } from '@/components/common/Badge';
 import { ZoneDiagram } from '@/components/visuals/ZoneDiagram';
 import { SECURITY_CONTENT, SecurityControl } from '@/content/security-controls';
 import { TRUST_CENTER_CONTENT } from '@/content/trust-center';
+import { PageEffects } from '@/components/motion/PageEffects';
+import { Reveal } from '@/components/motion/Reveal';
+import { SplitText } from '@/components/motion/SplitText';
 import {
   TrustCenterTOC,
   PrintButton,
@@ -64,14 +67,17 @@ export default function SecurityPage() {
   };
 
   return (
-    <div className="bg-[#09090B] text-text min-h-screen py-8 sm:py-12 selection:bg-teal/30 selection:text-white">
+    <div className="relative bg-[#09090B] text-text min-h-screen py-8 sm:py-12 selection:bg-teal/30 selection:text-white overflow-hidden">
+      <PageEffects />
+      <div className="cy-grid-bg no-print" aria-hidden="true" />
       {/* Print Stylesheet */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
             @media print {
               body { background: #ffffff !important; color: #000000 !important; }
-              nav, footer, .no-print { display: none !important; }
+              nav, footer, .no-print, [data-cy-reveal] { display: none !important; }
+              .cy-grid-bg, .cy-scroll-progress { display: none !important; }
               .bg-\\[\\#09090B\\], .bg-surface, .bg-\\[\\#0E0F14\\], .bg-\\[\\#101015\\], .bg-\\[\\#121217\\] {
                 background: #ffffff !important;
                 color: #000000 !important;
@@ -88,7 +94,7 @@ export default function SecurityPage() {
         }}
       />
 
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-8 sm:space-y-12">
+      <div className="container mx-auto px-4 sm:px-6 max-w-7xl space-y-8 sm:space-y-12 relative z-10">
         {/* HEADER STRIP */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-border">
           <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
@@ -130,13 +136,15 @@ export default function SecurityPage() {
           </div>
 
           <h1 className="font-heading font-black text-4xl sm:text-5xl lg:text-6xl text-text tracking-tightest">
-            Security is the architecture,{' '}
+            <SplitText text="Security is the architecture," />{' '}
             <span className="gradient-text font-black">not an add-on.</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed font-sans">
-            {SECURITY_CONTENT.hero.subtitle}
-          </p>
+          <Reveal variant="fade-up" delay={120}>
+            <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed font-sans">
+              {SECURITY_CONTENT.hero.subtitle}
+            </p>
+          </Reveal>
         </div>
 
         {/* MAIN LAYOUT: Sticky Left TOC + Main Content */}
@@ -180,12 +188,13 @@ export default function SecurityPage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-cy-stagger="true">
                   {claimedControls.map((ctrl) => (
-                    <div
+                    <Reveal
                       key={ctrl.id}
                       id={ctrl.id}
-                      className="p-5 rounded-2xl bg-[#0E0F14] border border-border hover:border-teal/40 transition-all space-y-3 flex flex-col justify-between"
+                      variant="fade-up"
+                      className="cy-hover-card p-5 rounded-2xl bg-[#0E0F14] border border-border hover:border-teal/40 transition-all space-y-3 flex flex-col justify-between"
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
@@ -219,7 +228,7 @@ export default function SecurityPage() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </Reveal>
                   ))}
                 </div>
               </div>
@@ -236,12 +245,13 @@ export default function SecurityPage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-cy-stagger="true">
                   {roadmapControls.map((ctrl) => (
-                    <div
+                    <Reveal
                       key={ctrl.id}
                       id={ctrl.id}
-                      className="p-5 rounded-2xl bg-[#0A0A0E] border border-border/80 space-y-3 flex flex-col justify-between"
+                      variant="fade-up"
+                      className="cy-hover-card p-5 rounded-2xl bg-[#0A0A0E] border border-border/80 space-y-3 flex flex-col justify-between"
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
@@ -264,7 +274,7 @@ export default function SecurityPage() {
                           {ctrl.howWeVerify}
                         </span>
                       </div>
-                    </div>
+                    </Reveal>
                   ))}
                 </div>
               </div>
@@ -736,7 +746,9 @@ export default function SecurityPage() {
                 </p>
               </div>
 
-              <ZoneDiagram />
+              <Reveal variant="scale">
+                <ZoneDiagram />
+              </Reveal>
 
               <div className="p-4 rounded-xl bg-[#14141B] border border-border text-xs font-mono text-muted text-center">
                 System Architecture: Coming soon — we&apos;re still building and not yet integrated with AWS.

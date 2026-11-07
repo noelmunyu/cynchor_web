@@ -32,11 +32,11 @@ export const TEAM_CONTENT: TeamContent = {
       tagline: "Architecting what lasts, breaking what doesn't.",
       focusAreas: ['Cloud security', 'DevSecOps', 'Penetration testing'],
       shortBio:
-        'Nairobi-based cloud and cybersecurity engineer who bridges building resilient AWS infrastructure and testing it exactly as an attacker would.',
+        'Nairobi-based cloud and cybersecurity engineer who bridges building resilient cloud infrastructure and testing it exactly as an attacker would.',
       fullBio: [
-        'Elijah Chimera Mangale is a Nairobi-based cloud and cybersecurity engineer who bridges the gap between building resilient AWS infrastructure and rigorously testing it exactly as an attacker would.',
+        'Elijah Chimera Mangale is a Nairobi-based cloud and cybersecurity engineer who bridges the gap between building resilient cloud infrastructure and rigorously testing it exactly as an attacker would.',
         'He works across a modern DevSecOps stack, including Terraform, Kubernetes and Python, with a strict, safety-first mindset, and develops secure architectures and bespoke security tools like Raisins that prioritize explicit authorization and evidence-backed findings.',
-        'An AWS Community Builder and certified Cloud Practitioner with a foundational background in Economics and Finance, Elijah translates complex technical risks into clear business metrics around cost and compliance. He delivers transparent penetration tests and shares hands-on technical workflows on his YouTube channel, archxploit.',
+        'A recognized cloud community leader and certified Cloud Practitioner with a foundational background in Economics and Finance, Elijah translates complex technical risks into clear business metrics around cost and compliance. He delivers transparent penetration tests and shares hands-on technical workflows on his YouTube channel, archxploit.',
         "His mission: architecting what lasts, breaking what doesn't, and earning trust in between.",
       ],
     },

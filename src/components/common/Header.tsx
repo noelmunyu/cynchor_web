@@ -30,7 +30,7 @@ export function Header() {
             <div className="flex items-center gap-2">
               <span className="font-heading font-semibold text-text text-[11px]">Cynchor Range:</span>
               <span className="hidden sm:inline text-[11px] text-muted">
-                Invite-only demo environment. AWS platform in preview.
+                Invite-only demo environment. Cloud platform in preview.
               </span>
             </div>
             <div className="flex items-center gap-3">

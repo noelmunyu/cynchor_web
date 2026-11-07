@@ -50,12 +50,12 @@ export default function AboutPage() {
               Anchoring cyber defense in practical reality
             </h2>
             <p className="text-muted leading-relaxed">
-              [Owner Story Placeholder: Traditional cyber training relies on multiple-choice quizzes
-              or disconnected CTF puzzles that fail to simulate operational pressure. Cynchor was built
-              to provide authentic environments where operators face real adversarial tactics.]
+              Traditional cyber training relies on static quizzes or disconnected puzzles
+              that fail to replicate true operational pressure. Cynchor was built
+              to provide authentic environments where operators face real adversarial tactics.
             </p>
             <p className="text-muted leading-relaxed">
-              From our live Proxmox-based on-premise lab (V1) to our upcoming AWS cloud platform (V2),
+              From our live Proxmox-based on-premise lab (V1) to our upcoming cloud-hosted platform (V2),
               every component replicates authentic network topologies without risking production assets.
             </p>
           </div>

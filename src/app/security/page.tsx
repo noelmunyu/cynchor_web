@@ -214,19 +214,10 @@ export default function SecurityPage() {
                         <div className="flex items-start gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-teal" />
                           <span>
-                            <strong className="text-text font-medium">How we verify:</strong>{' '}
+                            <strong className="text-text font-medium">Verification:</strong>{' '}
                             {ctrl.howWeVerify}
                           </span>
                         </div>
-                        {ctrl.evidence && ctrl.evidence.length > 0 && (
-                          <div className="text-[10px] text-muted space-y-0.5 pl-5">
-                            {ctrl.evidence.map((ev, i) => (
-                              <div key={i} className="truncate">
-                                Source: <code className="text-teal">{ev.file}</code>
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </Reveal>
                   ))}
@@ -671,7 +662,7 @@ export default function SecurityPage() {
                 </p>
               </div>
 
-              {/* OWNER TODO: Ensure security@cynchor.com mailbox is active before public release */}
+              {/* Coordinated vulnerability disclosure contact */}
               <div className="p-6 rounded-2xl bg-[#0E0F14] border border-border space-y-5 font-sans">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
                   <div>
@@ -690,14 +681,13 @@ export default function SecurityPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href={TRUST_CENTER_CONTENT.incidentResponse.securityTxtUrl}
+                  <a
+                    href="mailto:security@cynchor.com"
                     className="px-3 py-1.5 rounded-lg bg-[#14141B] border border-border text-xs font-mono text-teal hover:border-teal flex items-center gap-1.5 transition-colors shrink-0 self-start sm:self-auto"
                   >
-                    <FileCode className="w-3.5 h-3.5" />
-                    <span>RFC 9116 security.txt</span>
-                    <ExternalLink className="w-3 h-3 text-muted" />
-                  </Link>
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>security@cynchor.com</span>
+                  </a>
                 </div>
 
                 <div className="space-y-2 text-xs">
@@ -751,7 +741,7 @@ export default function SecurityPage() {
               </Reveal>
 
               <div className="p-4 rounded-xl bg-[#14141B] border border-border text-xs font-mono text-muted text-center">
-                System Architecture: Coming soon — we&apos;re still building and not yet integrated with AWS.
+                System Architecture: Coming soon — we&apos;re still building our cloud platform integration.
               </div>
             </section>
 

@@ -115,7 +115,7 @@ export const PRODUCT_CONTENT = {
     v2: {
       title: 'Planned V2 Cloud Architecture',
       badge: 'Upcoming (V2)',
-      note: "System Architecture: Coming soon — we're still building and not yet integrated with AWS.",
+      note: "System Architecture: Coming soon — we're still building our cloud platform integration.",
       description: 'Scalable multi-tenant cloud cyber range designed for on-demand lab dispatching and browser-based access.',
       points: [
         'Browser-based access is planned for zero-footprint student workstations (nothing installed locally).',
@@ -144,7 +144,7 @@ export const PRODUCT_CONTENT = {
       badge: 'Upcoming (V2)',
       badgeType: 'coral',
       items: [
-        'AWS-hosted on-demand scalable cyber range',
+        'Cloud-hosted on-demand scalable cyber range',
         'Facilitator-led live multi-squad cohort console',
         'Automated adversary bot playbook runner',
         'Browser-based in-range interactive student terminals',

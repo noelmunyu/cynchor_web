@@ -97,7 +97,7 @@ export interface TrustCenterContent {
     title: string;
     subtitle: string;
     contactEmail: string;
-    securityTxtUrl: string;
+    securityTxtUrl?: string;
     responseTargetsNote: string;
     acknowledgementTarget?: string; // rendered only if supplied
     triageTarget?: string; // rendered only if supplied
@@ -313,9 +313,9 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
         isVisible: true,
       },
       {
-        id: 'aws',
-        name: 'Amazon Web Services (AWS)',
-        purpose: 'Target cloud hosting architecture for V2 multi-region training infrastructure.',
+        id: 'cloud-provider',
+        name: 'Cloud Infrastructure Provider',
+        purpose: 'Target cloud-hosted architecture for V2 multi-region training infrastructure.',
         dataShared: 'None currently.',
         status: 'Planned (V2); not yet integrated',
         isVisible: true,
@@ -357,7 +357,6 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
     title: 'Incident Response & Vulnerability Disclosure',
     subtitle: 'Coordinated vulnerability disclosure guidelines and reporting channels.',
     contactEmail: 'security@cynchor.com',
-    securityTxtUrl: '/.well-known/security.txt',
     responseTargetsNote: 'Formal incident-response runbook with response targets is on our roadmap.',
     // acknowledgementTarget & triageTarget omitted until owner supplies numbers
     guidelines: [
@@ -420,8 +419,8 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
       {
         id: 'q-vulnerability-handling',
         question: 'How do you handle vulnerability reports?',
-        answer: 'Through our published RFC 9116 security.txt manifest and coordinated vulnerability disclosure policy at security@cynchor.com.',
-        controlId: 'ctrl-security-txt',
+        answer: 'Through our coordinated vulnerability disclosure policy via direct reporting to security@cynchor.com.',
+        controlId: 'ctrl-vuln-disclosure',
         isInPlace: true,
       },
       {
@@ -433,7 +432,7 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
       {
         id: 'q-subprocessors',
         question: 'What third-party subprocessors or external vendors are contacted?',
-        answer: 'Google Fonts for typography assets. No analytics, advertising, or email-delivery vendors are used. AWS is planned for V2 and not yet integrated.',
+        answer: 'Google Fonts for typography assets. No analytics, advertising, or email-delivery vendors are used. Cloud hosting is planned for V2 and not yet integrated.',
         isInPlace: true,
       },
       {
@@ -470,12 +469,6 @@ export const TRUST_CENTER_CONTENT: TrustCenterContent = {
     subtitle: 'Public security artifacts, printable posture summaries, and questionnaire requests.',
     contactEmail: 'security@cynchor.com',
     items: [
-      {
-        title: 'RFC 9116 security.txt',
-        type: 'Public Manifest',
-        href: '/.well-known/security.txt',
-        isExternal: true,
-      },
       {
         title: 'Printable Trust Center Summary',
         type: 'Browser Print / PDF',

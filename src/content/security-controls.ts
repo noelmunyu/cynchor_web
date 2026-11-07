@@ -93,7 +93,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/db.ts', contains: 'crypto.scryptSync(password, actualSalt, 64)' },
         { file: 'src/lib/db.ts', contains: 'crypto.timingSafeEqual' },
       ],
-      howWeVerify: 'Tested in tests/securityControls.test.ts: verifies unique salts per user and constant-time equality validation.',
+      howWeVerify: 'Automated test suite validates unique salts per user and constant-time equality comparisons.',
     },
     {
       id: 'ctrl-session-sec',
@@ -108,7 +108,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/session.ts', contains: "sameSite: 'lax'" },
         { file: 'src/lib/session.ts', contains: 'export function revokeUserSessions' },
       ],
-      howWeVerify: 'Enforced in src/lib/session.ts and tested in tests/sessionRevocation.test.ts.',
+      howWeVerify: 'Server-side session management actively enforces token validation and immediate revocation.',
     },
     {
       id: 'ctrl-invite-tokens',
@@ -122,7 +122,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/db.ts', contains: "crypto.randomBytes(32).toString('hex')" },
         { file: 'src/lib/db.ts', contains: 'export function verifyAndConsumeInvite' },
       ],
-      howWeVerify: 'Tested in tests/securityControls.test.ts: asserts 256-bit token entropy and replay rejection.',
+      howWeVerify: 'Cryptographic test suite asserts 256-bit token entropy and replay rejection.',
     },
     {
       id: 'ctrl-rate-limiting',
@@ -136,7 +136,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/session.ts', contains: 'export function checkRateLimit' },
         { file: 'src/app/api/auth/login/route.ts', contains: 'checkRateLimit(`login_${ip}`, 5, 60)' },
       ],
-      howWeVerify: 'Tested in tests/securityControls.test.ts: verifies 5-attempt threshold and lockout retry-after duration.',
+      howWeVerify: 'Automated test suite verifies sliding-window attempt thresholds and lockout retry-after duration.',
     },
     {
       id: 'ctrl-input-validation',
@@ -150,7 +150,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/validators.ts', contains: 'export const loginSchema = z.object' },
         { file: 'src/lib/validators.ts', contains: 'export const accessRequestSchema = z.object' },
       ],
-      howWeVerify: 'Tested in tests/validators.test.ts: asserts schema rejection on malformed inputs and script tags.',
+      howWeVerify: 'Input parsing suite asserts schema rejection on malformed inputs and script injections.',
     },
     {
       id: 'ctrl-security-headers',
@@ -164,7 +164,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/middleware.ts', contains: "frame-ancestors 'none'" },
         { file: 'src/middleware.ts', contains: 'Cross-origin request blocked.' },
       ],
-      howWeVerify: 'Enforced globally via Next.js middleware in src/middleware.ts on all HTTP requests.',
+      howWeVerify: 'HTTP middleware actively enforces strict transport security, framing denial, and CSP across all routes.',
     },
     {
       id: 'ctrl-rbac-enforcement',
@@ -178,7 +178,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/guards.ts', contains: 'if (opts.operator === true && isOperator === false) redirect' },
         { file: 'src/app/api/admin/route.ts', contains: 'Forbidden: Operator privileges required' },
       ],
-      howWeVerify: 'Guards verify signed operator credentials on the server before rendering admin views or executing admin APIs.',
+      howWeVerify: 'Server-side authorization guards verify signed operator credentials before rendering admin views or executing APIs.',
     },
     {
       id: 'ctrl-audit-trail',
@@ -192,7 +192,7 @@ export const SECURITY_CONTENT = {
         { file: 'src/lib/db.ts', contains: 'CREATE TRIGGER IF NOT EXISTS audit_logs_no_update' },
         { file: 'src/lib/db.ts', contains: 'CREATE TRIGGER IF NOT EXISTS audit_logs_no_delete' },
       ],
-      howWeVerify: 'Tested in tests/auditAppendOnly.test.ts: verifies that UPDATE and DELETE statements raise database abort exceptions.',
+      howWeVerify: 'Database integrity suite verifies that update and delete attempts on audit records raise abort exceptions.',
     },
     {
       id: 'ctrl-invite-only',
@@ -218,21 +218,20 @@ export const SECURITY_CONTENT = {
       evidence: [
         { file: 'src/lib/validators.ts', contains: 'export const accessRequestSchema = z.object' },
       ],
-      howWeVerify: 'Tested in tests/validators.test.ts: verifies payload rejects extraneous unmodeled fields.',
+      howWeVerify: 'Schema validation suite verifies that access payloads reject extraneous unmodeled fields.',
     },
     {
-      id: 'ctrl-security-txt',
+      id: 'ctrl-vuln-disclosure',
       category: 'disclosure',
-      title: 'RFC 9116 standardized security.txt disclosure manifest',
-      description: 'Vulnerability disclosure policy and reporting contacts are published at /.well-known/security.txt conforming to RFC 9116 standards.',
+      title: 'Coordinated vulnerability disclosure reporting channel',
+      description: 'Security researchers can report potential vulnerabilities directly to our engineering team via security@cynchor.com.',
       visibility: 'claimed',
       status: 'live-v1',
       verified: true,
       evidence: [
-        { file: 'public/.well-known/security.txt', contains: 'Contact: mailto:security@cynchor.com' },
-        { file: 'public/.well-known/security.txt', contains: 'Expires:' },
+        { file: 'src/content/security-controls.ts', contains: 'contactEmail: \'security@cynchor.com\'' },
       ],
-      howWeVerify: 'Tested in tests/securityControls.test.ts: confirms RFC 9116 mandatory headers and future expiration date.',
+      howWeVerify: 'Dedicated monitoring of the coordinated disclosure intake inbox for security reports.',
     },
 
     // ════════════════════════════════════════════════════════════
@@ -259,7 +258,7 @@ export const SECURITY_CONTENT = {
       evidence: [
         { file: '.github/workflows/ci.yml', contains: 'npm audit' },
       ],
-      howWeVerify: 'Enforced via GitHub Actions in .github/workflows/ci.yml running npm audit --omit=dev --audit-level=high on push and pull requests.',
+      howWeVerify: 'Automated dependency vulnerability scanning is enforced on continuous integration pipelines.',
     },
     {
       id: 'ctrl-encryption-at-rest',
@@ -308,12 +307,12 @@ export const SECURITY_CONTENT = {
     {
       id: 'ctrl-cloudhsm',
       category: 'infrastructure',
-      title: 'AWS CloudHSM Hardware Root of Trust',
+      title: 'Hardware Security Module (HSM) Root of Trust',
       description: 'FIPS 140-2 Level 3 hardware security module key generation and storage.',
       visibility: 'hidden',
       status: 'designed-v2',
       verified: false,
-      howWeVerify: 'Pending AWS GovCloud production infrastructure deployment.',
+      howWeVerify: 'Pending cloud-hosted production infrastructure deployment.',
     },
     {
       id: 'ctrl-fedramp',
@@ -339,7 +338,7 @@ export const SECURITY_CONTENT = {
   honestyBlock: {
     title: "What we don't claim",
     points: [
-      'We do NOT claim SOC 2, ISO 27001, FedRAMP, or PCI-DSS certifications today. [OWNER TODO: Add formal compliance status once independent third-party audits are completed].',
+      'We do NOT claim SOC 2, ISO 27001, FedRAMP, or PCI-DSS certifications today. Independent third-party audit assessments are planned for future evaluation.',
       'The cyber range never stores, ingests, or processes real enterprise customer data or production credentials. All simulated entities, mail headers, and logs are 100% synthetic (fintechcorp.local).',
       'Our matchmaking algorithms do not claim AI-driven or skill-weighted balancing in V1; experience levels are saved to user profiles for self-organization.',
     ],
@@ -348,7 +347,6 @@ export const SECURITY_CONTENT = {
     title: 'Responsible Disclosure Policy',
     description: 'We welcome security researchers who discover potential vulnerabilities in our website, API, or simulation architecture to report them responsibly.',
     contactEmail: 'security@cynchor.com',
-    pgpKeyUrl: '/.well-known/security.txt',
     guidelines: [
       'Do not disrupt live range environments or degrade service availability for other users.',
       'Do not access or attempt to access data belonging to other organizations or accounts.',

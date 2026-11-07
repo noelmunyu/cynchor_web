@@ -26,7 +26,7 @@ export function Footer() {
 
             <p className="text-xs text-muted leading-relaxed max-w-sm pt-1">
               Adversarial cybersecurity training platform. Live Proxmox-based lab available today;
-              scalable AWS cloud range previewed for upcoming release.
+              scalable cloud-hosted range previewed for upcoming release.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <Badge type="v1" size="sm" />
@@ -124,11 +124,6 @@ export function Footer() {
                 <span className="text-[11px] text-muted/70 block font-mono">
                   100% Synthetic Range Data
                 </span>
-              </li>
-              <li>
-                <Link href="/.well-known/security.txt" className="hover:text-teal transition-colors text-[11px] font-mono">
-                  security.txt
-                </Link>
               </li>
             </ul>
           </div>

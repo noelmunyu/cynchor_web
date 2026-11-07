@@ -555,12 +555,6 @@ export default function ProductPage() {
               >
                 Security Page
               </Link>
-              <Link
-                href="/.well-known/security.txt"
-                className="px-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-mono text-teal hover:border-teal transition-colors"
-              >
-                security.txt
-              </Link>
             </div>
           </div>
 
@@ -655,10 +649,6 @@ export default function ProductPage() {
             <Link href="/security" className="px-3.5 py-2 rounded-xl bg-[#14141B] border border-border text-teal hover:border-teal flex items-center gap-1.5 transition-colors">
               <span>Security Posture</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <Link href="/.well-known/security.txt" className="px-3.5 py-2 rounded-xl bg-[#14141B] border border-border text-teal hover:border-teal flex items-center gap-1.5 transition-colors">
-              <span>security.txt</span>
-              <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
         </Reveal>

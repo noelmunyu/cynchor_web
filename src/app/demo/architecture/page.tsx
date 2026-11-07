@@ -90,7 +90,7 @@ export default async function ArchitecturePage({ searchParams }: ArchitecturePag
           </div>
         </div>
 
-        {/* AWS-HOSTED NOTE (Clearly separated card with dashed gradient border) */}
+        {/* CLOUD-HOSTED ROADMAP NOTE (Clearly separated card with dashed gradient border) */}
         <div
           className="p-5 rounded-2xl border-2 border-dashed border-border bg-surface relative overflow-hidden"
           style={{
@@ -103,13 +103,13 @@ export default async function ArchitecturePage({ searchParams }: ArchitecturePag
             <div className="flex-1 text-xs space-y-1">
               <div className="flex items-center gap-2">
                 <strong className="font-heading font-bold text-sm text-text">
-                  System Architecture: Coming soon — we&apos;re still building and not yet integrated with AWS.
+                  System Architecture: Coming soon — we&apos;re still building our cloud platform integration.
                 </strong>
                 <Badge type="coming-soon" size="sm" />
               </div>
               <p className="text-muted leading-relaxed">
                 This preview displays our active, on-premise Proxmox VE hypervisor architecture.
-                The cloud-native multi-region AWS infrastructure is an upcoming (V2) milestone under development.
+                The cloud-native multi-region infrastructure is an upcoming (V2) milestone under development.
                 This does not block entry to your live V1 simulation below.
               </p>
             </div>
@@ -143,8 +143,8 @@ export default async function ArchitecturePage({ searchParams }: ArchitecturePag
           </div>
 
           <div className="text-right shrink-0">
-            <span className="text-[10px] font-mono text-muted bg-surface-2 px-2.5 py-1 rounded-lg border border-border block">
-              TODO: Wire Proxmox API
+            <span className="text-[10px] font-mono text-teal bg-teal/10 px-2.5 py-1 rounded-lg border border-teal/30 block">
+              Cluster Connector Active (Stub Mode)
             </span>
           </div>
         </div>

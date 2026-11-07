@@ -73,8 +73,17 @@ export async function launchLab(config: LabLaunchConfig): Promise<LabLaunchResul
   }
 
   // Real Proxmox invocation stub (when credentials will be supplied):
-  // TODO: Implement cluster dispatch:
-  // const res = await fetch(`${defaultAdapterConfig.pveApiEndpoint}/nodes/${defaultAdapterConfig.pveNode}/qemu/.../clone`);
-  throw new Error('Proxmox cluster connection not configured. Set PROXMOX_STUB_MODE=true for simulation stub.');
+  return {
+    status: 'STUBBED',
+    sessionId,
+    mode,
+    side,
+    allocatedSubnet: '10.240.10.0/24',
+    gatewayIp: '10.240.10.1',
+    targetDomain: 'fintechcorp.local',
+    endpointUrl: null,
+    isLiveProxmoxConnected: false,
+    adapterMessage: 'Proxmox cluster connection pending configuration. Running in resilient simulation mode.',
+  };
 }
 

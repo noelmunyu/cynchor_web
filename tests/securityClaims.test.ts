@@ -83,20 +83,7 @@ test('Security Claims: forbidden phrase scan over content and security page', ()
   }
 });
 
-test('Security Claims: RFC 9116 security.txt contains mandatory fields and future expiry', () => {
+test('Security Claims: security.txt is removed to reduce exposure', () => {
   const secTxtPath = path.resolve(process.cwd(), 'public/.well-known/security.txt');
-  assert.ok(fs.existsSync(secTxtPath), 'security.txt missing');
-
-  const content = fs.readFileSync(secTxtPath, 'utf-8');
-  assert.ok(content.includes('Contact:'), 'security.txt missing Contact');
-  assert.ok(content.includes('Expires:'), 'security.txt missing Expires');
-  assert.ok(content.includes('Preferred-Languages:'), 'security.txt missing Preferred-Languages');
-  assert.ok(content.includes('Canonical:'), 'security.txt missing Canonical');
-
-  const expiresLine = content.split('\n').find((line) => line.startsWith('Expires:'));
-  assert.ok(expiresLine, 'Expires line not found');
-  const expiresValue = expiresLine.replace('Expires:', '').trim();
-  const parsedDate = new Date(expiresValue).getTime();
-  assert.ok(!isNaN(parsedDate), `Expires value is invalid date: ${expiresValue}`);
-  assert.ok(parsedDate > Date.now(), `Expires date must be in the future: ${expiresValue}`);
+  assert.equal(fs.existsSync(secTxtPath), false, 'security.txt must not exist in public directory');
 });

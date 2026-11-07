@@ -31,7 +31,7 @@ export function Badge({ type, className = '', size = 'md' }: BadgeProps) {
       );
 
     case 'coming-soon':
-      // CRITICAL: Used ONLY for AWS architecture note and GRC role
+      // Used for architecture note and GRC role
       return (
         <span
           className={`inline-flex items-center gap-1 font-medium rounded-full bg-surface-2 border border-border text-muted/80 ${sizeClasses} ${className}`}

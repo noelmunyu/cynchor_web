@@ -24,7 +24,7 @@ export const ZONES_CONTENT: ZoneItem[] = [
     controls: [
       'Strict CSP (frame-ancestors none)',
       'HSTS, X-Content-Type-Options: nosniff, Referrer-Policy',
-      'RFC 9116 security.txt disclosure manifest',
+      'Coordinated vulnerability disclosure reporting channel',
     ],
     blocks: [
       'Framing and clickjacking attacks',

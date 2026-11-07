@@ -95,14 +95,8 @@ test('Security Controls: append-only audit log records actions with IP hashes', 
   assert.equal(found.ip_hash, hashIpAddress(testIp));
 });
 
-test('Security Controls: security.txt is present and conforms to RFC 9116', () => {
+test('Security Controls: security.txt is removed to reduce exposure', () => {
   const secTxtPath = path.join(process.cwd(), 'public', '.well-known', 'security.txt');
-  assert.equal(fs.existsSync(secTxtPath), true);
-
-  const content = fs.readFileSync(secTxtPath, 'utf-8');
-  assert.ok(content.includes('Contact: mailto:security@cynchor.com'));
-  assert.ok(content.includes('Expires:'));
-  assert.ok(content.includes('Preferred-Languages:'));
-  assert.ok(content.includes('Canonical:'));
+  assert.equal(fs.existsSync(secTxtPath), false, 'security.txt must not exist in public directory');
 });
 

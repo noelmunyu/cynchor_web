@@ -36,3 +36,21 @@ test('Motion: splitWords is deterministic and handles empty or short inputs', ()
   assert.deepEqual(splitWords(text), splitWords(text));
 });
 
+test('Motion: motion.css contains .cy-no-anchor and proper SplitText specificity', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const css = fs.readFileSync(path.resolve(process.cwd(), 'src/styles/motion.css'), 'utf-8');
+
+  assert.ok(css.includes('.cy-no-anchor'), 'Must define .cy-no-anchor');
+  assert.ok(css.includes('overflow-anchor: none'), 'Must define overflow-anchor: none');
+  assert.ok(
+    css.includes('[data-cy-state="ready"]:not([data-cy-in="true"]) .cy-split-word'),
+    'Split word reveal must bind :not([data-cy-in="true"]) to the parent state'
+  );
+  assert.ok(
+    !css.includes('[data-cy-state="ready"] .cy-split-word:not([data-cy-in="true"])'),
+    'Must not leave :not([data-cy-in="true"]) on child span causing specificity inversion'
+  );
+});
+
+

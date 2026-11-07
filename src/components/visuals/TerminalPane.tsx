@@ -55,7 +55,7 @@ export function TerminalPane({
       </div>
 
       {/* Terminal content */}
-      <div className="p-3 text-[13px] leading-relaxed flex-1 overflow-y-auto max-h-56 space-y-1">
+      <div className="p-3 text-[13px] leading-relaxed flex-1 overflow-y-auto max-h-56 space-y-1 cy-no-anchor">
         <div className="text-muted/60 text-xs"># Session established over synthetic range link 10.0.1.0/24</div>
         <div className="text-muted/60 text-xs mb-2"># Strict compliance mode: RFC 1918 addresses only</div>
 

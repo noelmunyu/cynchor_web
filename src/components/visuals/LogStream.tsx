@@ -25,8 +25,11 @@ export function LogStream({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    const el = containerRef.current;
+    if (!el) return;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [logs]);
 
@@ -42,7 +45,7 @@ export function LogStream({
 
       <div
         ref={containerRef}
-        className="space-y-1.5 overflow-y-auto max-h-48 text-[11px] leading-relaxed scrollbar-thin scrollbar-thumb-[#26262C]"
+        className="space-y-1.5 overflow-y-auto max-h-48 text-[11px] leading-relaxed scrollbar-thin scrollbar-thumb-[#26262C] cy-no-anchor"
       >
         {logs.length === 0 ? (
           <div className="text-muted/60 py-4 text-center">Listening on syslog socket 10.0.99.1:514...</div>

@@ -408,14 +408,14 @@ export function LaptopEventMockup() {
               {/* SCREEN DISPLAY CONTAINER (Aspect Ratio 16:10) */}
               <div
                 ref={screenRef}
-                className="relative mt-2 w-full rounded-[8px] bg-[#09090B] overflow-hidden border border-[#26262C] shadow-inner"
+                className="relative mt-2 w-full rounded-[8px] bg-[#09090B] overflow-hidden border border-[#26262C] shadow-inner cy-no-anchor"
                 style={{ aspectRatio: '16 / 10' }}
                 role="img"
                 aria-label="Cynchor live cyber range interactive simulation"
               >
                 {/* FIXED 960x600 DESIGN CANVAS */}
                 <div
-                  className="absolute top-0 left-0 text-[#E5E6E6] font-sans overflow-hidden"
+                  className="absolute top-0 left-0 text-[#E5E6E6] font-sans overflow-hidden cy-no-anchor"
                   style={{
                     width: 960,
                     height: 600,
@@ -670,7 +670,7 @@ export function LaptopEventMockup() {
                         </div>
 
                         {/* 5 Ordered Attack Steps */}
-                        <div className="space-y-2 my-auto">
+                        <div className="space-y-2 my-auto cy-no-anchor">
                           {RED_STEPS.map((step) => {
                             const isDone = (scenarioIndex === 0 || step.id <= 3) && simTime >= step.doneTime;
                             const isActive = !isDone && simTime >= step.triggerTime;
@@ -744,7 +744,7 @@ export function LaptopEventMockup() {
                         </div>
 
                         {/* Alerts List reacting to Red Steps */}
-                        <div className="space-y-2 my-auto">
+                        <div className="space-y-2 my-auto cy-no-anchor">
                           {visibleAlerts.length === 0 ? (
                             <div className="p-8 text-center text-[#A1A1AA] font-mono text-sm">
                               <Radio className="w-6 h-6 mx-auto mb-2 text-teal animate-pulse" />
@@ -928,7 +928,7 @@ export function LaptopEventMockup() {
                       </div>
                     </div>
 
-                    <div className="space-y-3 my-auto">
+                    <div className="space-y-3 my-auto cy-no-anchor">
                       {BLUE_ALERTS_SCENARIO_1.map((alert) => (
                         <div key={alert.id} className="p-3.5 rounded-xl bg-[#111114] border border-[#26262C] flex items-center justify-between text-base">
                           <div className="flex items-center gap-3">
@@ -987,7 +987,7 @@ export function LaptopEventMockup() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 cy-no-anchor">
                       <div className="p-3.5 rounded-xl bg-[#17171B] border border-coral/40 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <span className="w-9 h-9 rounded-full bg-coral/20 border border-coral flex items-center justify-center text-sm font-bold text-coral">

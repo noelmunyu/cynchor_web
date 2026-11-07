@@ -67,7 +67,7 @@ export function AlertQueue({
       </div>
 
       {/* Alert list */}
-      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-56 overflow-y-auto pr-1 cy-no-anchor">
         {alerts.length === 0 ? (
           <div className="py-6 text-center text-xs text-muted font-mono">
             No active SOC alerts. Baseline nominal.

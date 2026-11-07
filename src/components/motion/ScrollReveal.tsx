@@ -3,6 +3,9 @@
 import { useEffect } from 'react';
 import '@/styles/motion.css';
 
+// Module-level set ensuring reveal is strictly one-way and idempotent across re-renders
+const revealedSet = new WeakSet<HTMLElement>();
+
 export function ScrollReveal() {
   useEffect(() => {
     // Check reduced motion
@@ -32,16 +35,25 @@ export function ScrollReveal() {
 
     // Progressive enhancement viewport check:
     // Elements already above or within viewport are revealed immediately without flash.
-    // Elements below the fold are marked with data-cy-state="ready" so CSS can animate them on scroll.
+    // Reveal is strictly one-way: revealed elements are never re-hidden.
     const windowHeight = window.innerHeight;
     const belowFoldElements: HTMLElement[] = [];
 
     revealElements.forEach((el) => {
+      if (revealedSet.has(el) || el.getAttribute('data-cy-in') === 'true') {
+        revealedSet.add(el);
+        el.setAttribute('data-cy-in', 'true');
+        el.removeAttribute('data-cy-state');
+        return;
+      }
+
       const rect = el.getBoundingClientRect();
       const isInViewport = rect.top < windowHeight && rect.bottom > 0;
 
       if (isInViewport) {
+        revealedSet.add(el);
         el.setAttribute('data-cy-in', 'true');
+        el.removeAttribute('data-cy-state');
       } else {
         el.setAttribute('data-cy-state', 'ready');
         belowFoldElements.push(el);
@@ -54,7 +66,9 @@ export function ScrollReveal() {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const target = entry.target as HTMLElement;
+            revealedSet.add(target);
             target.setAttribute('data-cy-in', 'true');
+            target.removeAttribute('data-cy-state');
             observer.unobserve(target);
           }
         });
@@ -74,10 +88,15 @@ export function ScrollReveal() {
           const target = document.querySelector(window.location.hash);
           if (target) {
             target.querySelectorAll<HTMLElement>('[data-cy-reveal]').forEach((child) => {
+              revealedSet.add(child);
               child.setAttribute('data-cy-in', 'true');
+              child.removeAttribute('data-cy-state');
             });
             if (target.hasAttribute('data-cy-reveal')) {
-              target.setAttribute('data-cy-in', 'true');
+              const htmlTarget = target as HTMLElement;
+              revealedSet.add(htmlTarget);
+              htmlTarget.setAttribute('data-cy-in', 'true');
+              htmlTarget.removeAttribute('data-cy-state');
             }
           }
         } catch {

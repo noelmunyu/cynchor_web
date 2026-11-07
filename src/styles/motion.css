@@ -80,7 +80,7 @@
   transition-delay: var(--cy-word-delay, 0ms);
 }
 
-[data-cy-state="ready"] .cy-split-word:not([data-cy-in="true"]) {
+[data-cy-state="ready"]:not([data-cy-in="true"]) .cy-split-word {
   transform: translateY(115%);
   opacity: 0;
 }
@@ -314,6 +314,14 @@
 
 .cy-btn-sheen:hover::after {
   transform: translateX(380%) rotate(25deg);
+}
+
+/* ════════════════════════════════════════════════════════════
+   4.5 SCROLL ANCHORING UTILITIES
+   ════════════════════════════════════════════════════════════ */
+
+.cy-no-anchor {
+  overflow-anchor: none;
 }
 
 /* ════════════════════════════════════════════════════════════

@@ -21,18 +21,18 @@ export function PlayModeSwitch({
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();
       onModeChange('self-service');
-      if (typeof window !== 'undefined') window.location.hash = 'self-service';
+      if (typeof window !== 'undefined') window.history.replaceState(null, '', '#self-service');
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
       e.preventDefault();
       onModeChange('facilitator-led');
-      if (typeof window !== 'undefined') window.location.hash = 'facilitator-led';
+      if (typeof window !== 'undefined') window.history.replaceState(null, '', '#facilitator-led');
     }
   };
 
   const selectMode = (newMode: PlayMode) => {
     onModeChange(newMode);
     if (typeof window !== 'undefined') {
-      window.location.hash = newMode;
+      window.history.replaceState(null, '', `#${newMode}`);
     }
   };
 

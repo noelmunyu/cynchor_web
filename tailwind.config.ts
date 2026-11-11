@@ -41,8 +41,8 @@ const config: Config = {
         "glow-combo": "0 0 50px rgba(23,171,169,0.12), 0 0 50px rgba(234,105,75,0.12)",
       },
       fontFamily: {
-        heading: ["Lexend", "Outfit", "system-ui", "-apple-system", "sans-serif"],
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+        heading: ["var(--font-lexend)", "Outfit", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "-apple-system", "sans-serif"],
       },
       letterSpacing: {
         tightest: "-0.02em",

@@ -1,19 +1,21 @@
 import type { Metadata } from 'next';
-import { Inter, Lexend } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { Header } from '@/components/common/Header';
 import { Footer } from '@/components/common/Footer';
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: '../../public/fonts/inter-latin-variable.woff2',
   display: 'swap',
   variable: '--font-inter',
+  weight: '100 900',
 });
 
-const lexend = Lexend({
-  subsets: ['latin'],
+const lexend = localFont({
+  src: '../../public/fonts/lexend-latin-variable.woff2',
   display: 'swap',
   variable: '--font-lexend',
+  weight: '100 900',
 });
 
 export const metadata: Metadata = {

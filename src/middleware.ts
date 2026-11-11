@@ -30,9 +30,9 @@ export function middleware(request: NextRequest) {
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''};
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    style-src 'self' 'unsafe-inline';
     img-src 'self' data: https: blob:;
-    font-src 'self' data: https://fonts.gstatic.com;
+    font-src 'self' data:;
     connect-src 'self';
     frame-ancestors 'none';
     object-src 'none';

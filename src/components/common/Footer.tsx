@@ -111,9 +111,12 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-xs text-muted">
               <li>
-                <Link href="/admin" className="hover:text-teal transition-colors flex items-center gap-1">
-                  <Lock className="w-3 h-3 text-purple-400" /> Operator Console
-                </Link>
+                <span
+                  aria-disabled="true"
+                  className="flex items-center gap-1 text-[11px] text-muted/70 font-mono cursor-not-allowed select-none opacity-70"
+                >
+                  <Lock className="w-3 h-3 text-muted/50" /> Operator Console
+                </span>
               </li>
               <li>
                 <span className="text-[11px] text-muted/70 block font-mono">
